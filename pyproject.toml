@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "PowerGREP-style CLI for searching large unstructured .txt dumps and extracting fields by pattern shape, using Dask for parallel/out-of-core processing."
 requires-python = ">=3.10"
 dependencies = [
+    "click>=8.4.2",
     "dask[bag]>=2024.1.0",
     "pandas>=2.3.3",
 ]

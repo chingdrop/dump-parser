@@ -161,7 +161,7 @@ dump_parser/
   extractor.py   # Stage 2 vectorized pattern-based column extraction
   output.py      # CSV / JSON / console-summary writers (DataFrame -> file)
   models.py      # shared column-schema tuples + ScanSummary
-  cli.py         # argparse entry point (stage1-only / stage2-only / full)
+  cli.py         # Click entry point (stage1-only / stage2-only / full)
 tests/           # per-field regex tests + scanner + extractor + end-to-end
 sample_data/     # mixed-delimiter samples (incl. a latin-1 file)
 ```
