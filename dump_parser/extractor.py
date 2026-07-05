@@ -45,7 +45,7 @@ def extract_fields(source_lines: pd.Series) -> pd.DataFrame:
 
 
 def build_stage2_frame(
-    stage1_df: pd.DataFrame, one_row_per_match: bool = False
+        stage1_df: pd.DataFrame, one_row_per_match: bool = False
 ) -> pd.DataFrame:
     """Turn a Stage 1 matches DataFrame into the Stage 2 output DataFrame.
 

@@ -37,12 +37,12 @@ from typing import Dict, List, Pattern, Tuple
 # but *allows* a following ``.`` (a sentence-ending dot is simply not consumed
 # by the ``\.[A-Za-z]{2,}`` tail).
 EMAIL_RE: Pattern[str] = re.compile(
-    r"(?<![A-Za-z0-9._%+\-@])"          # left boundary: not mid-token
-    r"[A-Za-z0-9._%+\-]+"               # local part
+    r"(?<![A-Za-z0-9._%+\-@])"  # left boundary: not mid-token
+    r"[A-Za-z0-9._%+\-]+"  # local part
     r"@"
-    r"[A-Za-z0-9.\-]+"                  # domain labels
-    r"\.[A-Za-z]{2,}"                   # top-level domain
-    r"(?![A-Za-z0-9\-])"                # right boundary: not more domain chars
+    r"[A-Za-z0-9.\-]+"  # domain labels
+    r"\.[A-Za-z]{2,}"  # top-level domain
+    r"(?![A-Za-z0-9\-])"  # right boundary: not more domain chars
 )
 
 # ---------------------------------------------------------------------------
@@ -55,13 +55,13 @@ EMAIL_RE: Pattern[str] = re.compile(
 # group stops at whitespace, ``,`` and ``|``. Any trailing punctuation left on
 # the end is removed by :func:`strip_url`.
 URL_RE: Pattern[str] = re.compile(
-    r"(?<![\w@.\-])"                    # left boundary: not mid-token
-    r"(?:https?://|www\.)"              # scheme or bare www.
-    r"[A-Za-z0-9\-._~%]+"               # host (no ':' -> stops at a delimiter colon)
-    r"(?::\d+)?"                        # optional :port (digits only)
-    r"(?:[/?#][^\s,|:<>\"']*)?"         # optional path/query/fragment (stops at
-                                        # a delimiter ':'; a real port is caught
-                                        # by the :\d+ group above)
+    r"(?<![\w@.\-])"  # left boundary: not mid-token
+    r"(?:https?://|www\.)"  # scheme or bare www.
+    r"[A-Za-z0-9\-._~%]+"  # host (no ':' -> stops at a delimiter colon)
+    r"(?::\d+)?"  # optional :port (digits only)
+    r"(?:[/?#][^\s,|:<>\"']*)?"  # optional path/query/fragment (stops at
+    # a delimiter ':'; a real port is caught
+    # by the :\d+ group above)
 )
 
 # Trailing characters stripped from a URL match. Covers sentence punctuation and
@@ -96,10 +96,10 @@ def strip_url(match: str) -> str:
 # accepted. The left boundary forbids a preceding alnum/email char so the token
 # is standalone regardless of whether a space, comma, pipe or colon precedes it.
 _CUSTOM_TOKEN = (
-    r"(?<![A-Za-z0-9@._%+\-])"          # left boundary
-    r"[A-Za-z]+\d+"                     # letters then digits, e.g. Eagles211
-    r"@?"                               # optional trailing @ marker
-    r"(?![A-Za-z0-9@])"                 # right boundary: not an email local part
+    r"(?<![A-Za-z0-9@._%+\-])"  # left boundary
+    r"[A-Za-z]+\d+"  # letters then digits, e.g. Eagles211
+    r"@?"  # optional trailing @ marker
+    r"(?![A-Za-z0-9@])"  # right boundary: not an email local part
 )
 
 # custom_field_1 and custom_field_2 share the same structure by default (per the
@@ -108,7 +108,6 @@ _CUSTOM_TOKEN = (
 # pattern without touching the other.
 CUSTOM_FIELD_1_RE: Pattern[str] = re.compile(_CUSTOM_TOKEN)
 CUSTOM_FIELD_2_RE: Pattern[str] = re.compile(_CUSTOM_TOKEN)
-
 
 # Registry consumed by the extractor. Order defines column order.
 FIELD_PATTERNS: Dict[str, Pattern[str]] = {
@@ -142,7 +141,7 @@ TEST_CASES: Dict[str, List[Tuple[str, List[str]]]] = {
         ("comma,jane@acme.io,end", ["jane@acme.io"]),
         ("space jane@acme.io end", ["jane@acme.io"]),
         ("pipe|jane@acme.io|end", ["jane@acme.io"]),
-        ("colon:jane@acme.io:end", ["jane@acme.io"]),          # trailing : excluded
+        ("colon:jane@acme.io:end", ["jane@acme.io"]),  # trailing : excluded
         ("jane@acme.io:8080|bob@sub.example.co.uk", ["jane@acme.io", "bob@sub.example.co.uk"]),
         ("mix ,|:a.b+tag@mail-server.com:|,", ["a.b+tag@mail-server.com"]),
         ("no email here 12345", []),
@@ -150,8 +149,8 @@ TEST_CASES: Dict[str, List[Tuple[str, List[str]]]] = {
     "link": [
         ("comma,https://acme.io/path,end", ["https://acme.io/path"]),
         ("space http://acme.io/a?b=1 end", ["http://acme.io/a?b=1"]),
-        ("pipe|https://acme.io/x|end", ["https://acme.io/x"]),   # leading | excluded
-        ("colon www.acme.io:Eagles211", ["www.acme.io"]),        # colon-delimiter, not port
+        ("pipe|https://acme.io/x|end", ["https://acme.io/x"]),  # leading | excluded
+        ("colon www.acme.io:Eagles211", ["www.acme.io"]),  # colon-delimiter, not port
         ("port https://acme.io:8443/p#frag next", ["https://acme.io:8443/p#frag"]),
         ("frag:delim https://docs.acme.io/g#intro:Tigers12:next", ["https://docs.acme.io/g#intro"]),
         ("trail (https://en.wikipedia.org/wiki/Foo_(bar)).", ["https://en.wikipedia.org/wiki/Foo_(bar)"]),
@@ -162,7 +161,7 @@ TEST_CASES: Dict[str, List[Tuple[str, List[str]]]] = {
         ("space Eagles211 end", ["Eagles211"]),
         ("pipe|Falcons88@|end", ["Falcons88@"]),
         ("colon:Bears00:end", ["Bears00"]),
-        ("email-not-token Eagles211@acme.io", []),               # @ + domain -> email, not token
+        ("email-not-token Eagles211@acme.io", []),  # @ + domain -> email, not token
         ("mix ,|Eagles211@:| Falcons88 ", ["Eagles211@", "Falcons88"]),
         ("noDigits Word here", []),
     ],

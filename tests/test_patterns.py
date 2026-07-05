@@ -7,11 +7,8 @@ targeted delimiter-bleed regression checks.
 import pytest
 
 from dump_parser.patterns import (
-    CUSTOM_FIELD_1_RE,
-    EMAIL_RE,
     FIELD_PATTERNS,
     TEST_CASES,
-    URL_RE,
     strip_url,
 )
 

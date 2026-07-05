@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from .models import OUTPUT_COLUMNS, STAGE1_COLUMNS, ScanSummary
+from .models import STAGE1_COLUMNS, ScanSummary
 from .patterns import FIELD_PATTERNS
 
 

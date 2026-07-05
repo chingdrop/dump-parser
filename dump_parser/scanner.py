@@ -91,7 +91,7 @@ def _split_lines(text: str) -> pd.Series:
 
 
 def _vectorized_search(
-    lines: pd.Series, patterns: Sequence[Tuple[str, Pattern[str]]]
+        lines: pd.Series, patterns: Sequence[Tuple[str, Pattern[str]]]
 ) -> Tuple[pd.Series, pd.Series]:
     """Find the first matching search pattern per line, vectorized.
 
@@ -127,10 +127,10 @@ def _vectorized_search(
 
 
 def _hits_frame(
-    lines: pd.Series,
-    matched_pattern: pd.Series,
-    matched_text: pd.Series,
-    extra_columns: Dict[str, object],
+        lines: pd.Series,
+        matched_pattern: pd.Series,
+        matched_text: pd.Series,
+        extra_columns: Dict[str, object],
 ) -> pd.DataFrame:
     """Assemble a hits DataFrame from vectorized search results via boolean
     indexing (no per-line Python loop)."""
@@ -149,9 +149,9 @@ def _hits_frame(
 
 
 def _scan_file_streaming(
-    path: str,
-    patterns: Sequence[Tuple[str, Pattern[str]]],
-    fallback: str,
+        path: str,
+        patterns: Sequence[Tuple[str, Pattern[str]]],
+        fallback: str,
 ) -> dict:
     """Read, decode and search one whole file in a single vectorized pass."""
 
@@ -175,9 +175,9 @@ def _scan_file_streaming(
 
 
 def _scan_block(
-    block: bytes,
-    patterns: Sequence[Tuple[str, Pattern[str]]],
-    fallback: str,
+        block: bytes,
+        patterns: Sequence[Tuple[str, Pattern[str]]],
+        fallback: str,
 ) -> Tuple[int, bool, pd.DataFrame]:
     """Decode and search one newline-aligned byte block.
 
@@ -195,7 +195,7 @@ def _scan_block(
 
 
 def _compile_patterns(
-    patterns: Optional[Sequence[Tuple[str, Pattern[str]]]],
+        patterns: Optional[Sequence[Tuple[str, Pattern[str]]]],
 ) -> List[Tuple[str, Pattern[str]]]:
     if patterns:
         return list(patterns)
@@ -203,11 +203,11 @@ def _compile_patterns(
 
 
 def scan_paths(
-    path: str,
-    patterns: Optional[Sequence[Tuple[str, Pattern[str]]]] = None,
-    blocksize: Optional[int] = None,
-    fallback_encoding: str = "latin-1",
-    scheduler: str = "threads",
+        path: str,
+        patterns: Optional[Sequence[Tuple[str, Pattern[str]]]] = None,
+        blocksize: Optional[int] = None,
+        fallback_encoding: str = "latin-1",
+        scheduler: str = "threads",
 ) -> Tuple[pd.DataFrame, ScanSummary]:
     """Run Stage 1 over ``path``.
 
@@ -246,11 +246,11 @@ def scan_paths(
 
 
 def _run_streaming(
-    files: Sequence[str],
-    compiled: Sequence[Tuple[str, Pattern[str]]],
-    fallback: str,
-    scheduler: str,
-    summary: ScanSummary,
+        files: Sequence[str],
+        compiled: Sequence[Tuple[str, Pattern[str]]],
+        fallback: str,
+        scheduler: str,
+        summary: ScanSummary,
 ) -> pd.DataFrame:
     if not files:
         return pd.DataFrame(columns=list(STAGE1_COLUMNS))
@@ -275,12 +275,12 @@ def _run_streaming(
 
 
 def _run_blockwise(
-    files: Sequence[str],
-    compiled: Sequence[Tuple[str, Pattern[str]]],
-    blocksize: int,
-    fallback: str,
-    scheduler: str,
-    summary: ScanSummary,
+        files: Sequence[str],
+        compiled: Sequence[Tuple[str, Pattern[str]]],
+        blocksize: int,
+        fallback: str,
+        scheduler: str,
+        summary: ScanSummary,
 ) -> pd.DataFrame:
     delayeds = []
     meta_records: List[Tuple[str, int]] = []  # (file, block_index), aligned with delayeds
@@ -315,7 +315,7 @@ def _run_blockwise(
     # Vectorized prefix sum of line counts per file, replacing a manual
     # per-block running-offset accumulator.
     block_meta["offset"] = (
-        block_meta.groupby("file")["line_count"].cumsum() - block_meta["line_count"]
+            block_meta.groupby("file")["line_count"].cumsum() - block_meta["line_count"]
     )
 
     summary.lines_scanned = int(block_meta["line_count"].sum())

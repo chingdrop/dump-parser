@@ -41,7 +41,7 @@ class _BlockSizeParam(click.ParamType):
     """Click type for a human blocksize like ``64MB`` / ``16kb`` / ``1048576``."""
 
     name = "size"
-    _UNITS = {"B": 1, "KB": 1024, "MB": 1024**2, "GB": 1024**3}
+    _UNITS = {"B": 1, "KB": 1024, "MB": 1024 ** 2, "GB": 1024 ** 3}
 
     def convert(self, value, param, ctx) -> Optional[int]:
         if value is None:
@@ -58,7 +58,7 @@ BLOCKSIZE = _BlockSizeParam()
 
 
 def _build_search_patterns(
-    exprs: Tuple[str, ...],
+        exprs: Tuple[str, ...],
 ) -> Optional[List[Tuple[str, Pattern[str]]]]:
     if not exprs:
         return None
@@ -96,8 +96,8 @@ def _write_outputs(df, output_base: Optional[str], fmt: str) -> None:
 @click.option(
     "-o", "--output", "output_base",
     help="Output path base. Extension is added per format "
-    "(e.g. '-o out/r' -> out/r.csv, out/r.json). If omitted, results go to "
-    "stdout as CSV.",
+         "(e.g. '-o out/r' -> out/r.csv, out/r.json). If omitted, results go to "
+         "stdout as CSV.",
 )
 @click.option(
     "--format", "fmt",
@@ -111,14 +111,14 @@ def _write_outputs(df, output_base: Optional[str], fmt: str) -> None:
     multiple=True,
     metavar="REGEX",
     help="Stage 1 search regex (repeatable). Default: any line containing an "
-    "email, link, or custom token.",
+         "email, link, or custom token.",
 )
 @click.option(
     "--blocksize",
     type=BLOCKSIZE,
     default=None,
     help="Split large files into newline-aligned blocks of this size for "
-    "intra-file parallelism, e.g. 64MB. Default: one task per file.",
+         "intra-file parallelism, e.g. 64MB. Default: one task per file.",
 )
 @click.option(
     "--fallback-encoding",
@@ -137,7 +137,7 @@ def _write_outputs(df, output_base: Optional[str], fmt: str) -> None:
     "--one-row-per-match",
     is_flag=True,
     help="Emit one output row per individual match instead of pipe-joining "
-    "multiple matches into a single cell.",
+         "multiple matches into a single cell.",
 )
 @click.option(
     "--stage1-only",
@@ -155,17 +155,17 @@ def _write_outputs(df, output_base: Optional[str], fmt: str) -> None:
     help="Suppress the summary report on stderr.",
 )
 def _cli(
-    input_path: str,
-    output_base: Optional[str],
-    fmt: str,
-    patterns: Tuple[str, ...],
-    blocksize: Optional[int],
-    fallback_encoding: str,
-    scheduler: str,
-    one_row_per_match: bool,
-    stage1_only: bool,
-    stage2_only: bool,
-    no_summary: bool,
+        input_path: str,
+        output_base: Optional[str],
+        fmt: str,
+        patterns: Tuple[str, ...],
+        blocksize: Optional[int],
+        fallback_encoding: str,
+        scheduler: str,
+        one_row_per_match: bool,
+        stage1_only: bool,
+        stage2_only: bool,
+        no_summary: bool,
 ) -> int:
     """Search large unstructured .txt dumps and extract fields by pattern
     (delimiter-agnostic), using Dask for parallel/out-of-core work.

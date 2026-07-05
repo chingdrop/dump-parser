@@ -8,10 +8,10 @@ from dump_parser import cli, extractor, scanner
 def _make_dump(tmp_path):
     p = tmp_path / "dump.txt"
     p.write_text(
-        "jane@acme.io,https://acme.io/p,Eagles211@,Falcons88\n"       # comma
-        "bob@corp.net https://corp.net/x Ravens77 Hawks909@\n"        # space
-        "carol@x.io|www.x.io/y|Bears00@|Lions55\n"                    # pipe
-        "dave@x.io:https://x.io/z#a:Tigers12:Panthers34@\n"           # colon/mixed
+        "jane@acme.io,https://acme.io/p,Eagles211@,Falcons88\n"  # comma
+        "bob@corp.net https://corp.net/x Ravens77 Hawks909@\n"  # space
+        "carol@x.io|www.x.io/y|Bears00@|Lions55\n"  # pipe
+        "dave@x.io:https://x.io/z#a:Tigers12:Panthers34@\n"  # colon/mixed
         "prose with no extractable fields at all\n",
         encoding="utf-8",
     )
