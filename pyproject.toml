@@ -1,0 +1,23 @@
+[project]
+name = "dump-parser"
+version = "0.1.0"
+description = "PowerGREP-style CLI for searching large unstructured .txt dumps and extracting fields by pattern shape, using Dask for parallel/out-of-core processing."
+requires-python = ">=3.10"
+dependencies = [
+    "dask[bag]>=2024.1.0",
+]
+
+[project.scripts]
+dump-parser = "dump_parser.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["dump_parser"]

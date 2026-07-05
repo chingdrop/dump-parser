@@ -1,5 +1,0 @@
-# Runtime
-dask[bag]>=2024.1.0
-
-# Development / tests
-pytest>=7.0

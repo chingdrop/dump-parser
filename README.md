@@ -15,30 +15,38 @@ blob and every field is found by regex, anywhere on the line. See
 
 ## Install
 
+Dependencies are managed with [uv](https://docs.astral.sh/uv/):
+
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+uv sync
 ```
+
+This creates `.venv/` and installs `dump_parser` plus its runtime and dev
+dependencies (pinned in `uv.lock`). Prefix commands with `uv run`, or activate
+the venv (`source .venv/bin/activate`) and drop the prefix.
 
 ## Usage
 
 ```bash
 # Full pipeline over a directory (recursive), CSV + JSON output
-python -m dump_parser sample_data -o out/results --format both
+uv run dump-parser sample_data -o out/results --format both
 
 # Stage 1 only — dump the lines that matched, for later processing
-python -m dump_parser sample_data --stage1-only -o out/hits.csv
+uv run dump-parser sample_data --stage1-only -o out/hits.csv
 
 # Stage 2 only — parse a previously saved Stage 1 dump into columns
-python -m dump_parser out/hits.csv --stage2-only -o out/parsed.csv
+uv run dump-parser out/hits.csv --stage2-only -o out/parsed.csv
 
 # One huge file: split into 64 MB newline-aligned blocks for intra-file
 # parallelism, and emit one row per individual match
-python -m dump_parser big.txt --blocksize 64MB --one-row-per-match -o out/r
+uv run dump-parser big.txt --blocksize 64MB --one-row-per-match -o out/r
 
 # Custom Stage 1 search patterns (repeatable); true CPU parallelism
-python -m dump_parser dumps/ -p 'ACCT\d{6}' -p '(?i)password' --scheduler processes
+uv run dump-parser dumps/ -p 'ACCT\d{6}' -p '(?i)password' --scheduler processes
 ```
+
+`uv run python -m dump_parser ...` works identically to the `dump-parser`
+console script above.
 
 Results stream to stdout as CSV when `-o` is omitted. The summary report is
 printed to stderr (suppress with `--no-summary`).
@@ -77,7 +85,7 @@ failed to read.
 Run the pattern self-test / demo:
 
 ```bash
-python -m dump_parser.patterns
+uv run python -m dump_parser.patterns
 ```
 
 ## How Dask splits large files (verified)
@@ -127,8 +135,7 @@ sample_data/     # mixed-delimiter samples (incl. a latin-1 file)
 ## Tests
 
 ```bash
-pip install pytest
-python -m pytest -q
+uv run pytest -q
 ```
 
 Covers every regex field across comma/space/pipe/colon/mixed delimiters,
