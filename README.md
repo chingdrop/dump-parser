@@ -56,14 +56,14 @@ printed to stderr (suppress with `--no-summary`).
 
 ### Key flags
 
-| Flag | Purpose |
-|------|---------|
-| `-p/--pattern REGEX` | Stage 1 search regex (repeatable). Default: any line with an email, link, or custom token. |
-| `--blocksize 64MB` | Split large files into newline-aligned blocks for intra-file parallelism. Default: one task per file. |
-| `--scheduler` | `processes` (default — true CPU parallelism for regex, for PowerGREP-like speed), `threads`, or `synchronous`. |
-| `--one-row-per-match` | Emit one row per match instead of pipe-joining matches into a cell. |
-| `--fallback-encoding` | Encoding for non-UTF-8 lines (default `latin-1`). |
-| `--stage1-only` / `--stage2-only` | Run a single stage. |
+| Flag                              | Purpose                                                                                                        |
+|-----------------------------------|----------------------------------------------------------------------------------------------------------------|
+| `-p/--pattern REGEX`              | Stage 1 search regex (repeatable). Default: any line with an email, link, or custom token.                     |
+| `--blocksize 64MB`                | Split large files into newline-aligned blocks for intra-file parallelism. Default: one task per file.          |
+| `--scheduler`                     | `processes` (default — true CPU parallelism for regex, for PowerGREP-like speed), `threads`, or `synchronous`. |
+| `--one-row-per-match`             | Emit one row per match instead of pipe-joining matches into a cell.                                            |
+| `--fallback-encoding`             | Encoding for non-UTF-8 lines (default `latin-1`).                                                              |
+| `--stage1-only` / `--stage2-only` | Run a single stage.                                                                                            |
 
 ## Output
 
@@ -108,12 +108,12 @@ decode boundary too.
 
 ## The four field patterns
 
-| Column | Shape | Delimiter-safety |
-|--------|-------|------------------|
-| `email` | `local@domain.tld` | Char classes exclude `: , \| ` space, so a trailing `:` (e.g. `jane@acme.io:8080`) is never consumed. |
-| `link` | `http(s)://…` or `www.…` | Anchored on the scheme, so a leading `\|` can't be part of it. Host stops at a delimiter `:`; a real `:port` is matched explicitly. Path/query/fragment stop at whitespace, `,`, `\|`, `:`. Trailing punctuation is stripped (balanced `)` preserved). |
-| `custom_field_1` | `letters + digits + optional @`, e.g. `Eagles211@` | Left/right boundaries make it a standalone token under any delimiter. The trailing-`@` rule rejects email local parts (`Eagles211@acme.io` is *not* a token). |
-| `custom_field_2` | same shape as field 1 | Separate compiled pattern; swap in a distinct regex without touching field 1. |
+| Column           | Shape                                              | Delimiter-safety                                                                                                                                                                                                                                       |
+|------------------|----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `email`          | `local@domain.tld`                                 | Char classes exclude `: , \| ` space, so a trailing `:` (e.g. `jane@acme.io:8080`) is never consumed.                                                                                                                                                  |
+| `link`           | `http(s)://…` or `www.…`                           | Anchored on the scheme, so a leading `\|` can't be part of it. Host stops at a delimiter `:`; a real `:port` is matched explicitly. Path/query/fragment stop at whitespace, `,`, `\|`, `:`. Trailing punctuation is stripped (balanced `)` preserved). |
+| `custom_field_1` | `letters + digits + optional @`, e.g. `Eagles211@` | Left/right boundaries make it a standalone token under any delimiter. The trailing-`@` rule rejects email local parts (`Eagles211@acme.io` is *not* a token).                                                                                          |
+| `custom_field_2` | same shape as field 1                              | Separate compiled pattern; swap in a distinct regex without touching field 1.                                                                                                                                                                          |
 
 Run the pattern self-test / demo:
 
