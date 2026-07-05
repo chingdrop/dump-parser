@@ -1,9 +1,8 @@
 """End-to-end Stage 1 -> Stage 2 -> output tests, including the CLI."""
 
 import json
-import os
 
-from dump_parser import cli, extractor, output, scanner
+from dump_parser import cli, extractor, scanner
 
 
 def _make_dump(tmp_path):
@@ -22,17 +21,17 @@ def _make_dump(tmp_path):
 def test_full_pipeline_rows(tmp_path):
     _make_dump(tmp_path)
     matches, summary = scanner.scan_paths(str(tmp_path), scheduler="synchronous")
-    rows = extractor.extract_all(matches)
+    rows = extractor.build_stage2_frame(matches)
     assert summary.stage1_matches == 4  # prose line excluded
 
-    by_line = {r.line_number: r for r in rows}
-    assert by_line[1].email == "jane@acme.io"
-    assert by_line[1].link == "https://acme.io/p"
-    assert by_line[1].custom_field_1 == "Eagles211@|Falcons88"
+    by_line = rows.set_index("line_number")
+    assert by_line.loc[1, "email"] == "jane@acme.io"
+    assert by_line.loc[1, "link"] == "https://acme.io/p"
+    assert by_line.loc[1, "custom_field_1"] == "Eagles211@|Falcons88"
     # colon-delimited line: email/link don't bleed across ':'
-    assert by_line[4].email == "dave@x.io"
-    assert by_line[4].link == "https://x.io/z#a"
-    assert by_line[4].custom_field_1 == "Tigers12|Panthers34@"
+    assert by_line.loc[4, "email"] == "dave@x.io"
+    assert by_line.loc[4, "link"] == "https://x.io/z#a"
+    assert by_line.loc[4, "custom_field_1"] == "Tigers12|Panthers34@"
 
 
 def test_cli_csv_and_json(tmp_path):

@@ -120,33 +120,11 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _write_outputs(
-    args: argparse.Namespace,
-    *,
-    stage1_matches=None,
-    stage2_rows=None,
-) -> None:
-    """Write results to files (if -o given) or stdout (CSV)."""
+def _write_outputs(args: argparse.Namespace, df) -> None:
+    """Write ``df`` to files (if -o given) or stdout (CSV)."""
 
     if args.output is None:
-        # Stream CSV to stdout.
-        import csv as _csv
-
-        if stage1_matches is not None:
-            writer = _csv.DictWriter(
-                sys.stdout,
-                fieldnames=["file", "line_number", "matched_text", "pattern", "source_line"],
-            )
-            writer.writeheader()
-            for m in stage1_matches:
-                writer.writerow(m.as_dict())
-        else:
-            from .models import OUTPUT_COLUMNS
-
-            writer = _csv.DictWriter(sys.stdout, fieldnames=list(OUTPUT_COLUMNS))
-            writer.writeheader()
-            for row in stage2_rows:
-                writer.writerow(row.as_dict())
+        df.to_csv(sys.stdout, index=False)
         return
 
     base = args.output
@@ -154,19 +132,10 @@ def _write_outputs(
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
 
-    want_csv = args.format in ("csv", "both")
-    want_json = args.format in ("json", "both")
-
-    if stage1_matches is not None:
-        if want_csv:
-            output.write_stage1_csv(stage1_matches, _with_ext(base, ".csv"))
-        if want_json:
-            output.write_stage1_json(stage1_matches, _with_ext(base, ".json"))
-    else:
-        if want_csv:
-            output.write_stage2_csv(stage2_rows, _with_ext(base, ".csv"))
-        if want_json:
-            output.write_stage2_json(stage2_rows, _with_ext(base, ".json"))
+    if args.format in ("csv", "both"):
+        output.write_csv(df, _with_ext(base, ".csv"))
+    if args.format in ("json", "both"):
+        output.write_json(df, _with_ext(base, ".json"))
 
 
 def _with_ext(base: str, ext: str) -> str:
@@ -183,7 +152,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         # Input is a Stage 1 dump; skip scanning.
         matches = output.read_stage1(args.input)
         summary = ScanSummary(
-            files_scanned=len({m.file for m in matches}),
+            files_scanned=int(matches["file"].nunique()),
             lines_scanned=len(matches),
             stage1_matches=len(matches),
         )
@@ -197,11 +166,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         )
 
     if args.stage1_only:
-        _write_outputs(args, stage1_matches=matches)
+        _write_outputs(args, matches)
     else:
-        rows = extractor.extract_all(matches, one_row_per_match=args.one_row_per_match)
+        rows = extractor.build_stage2_frame(matches, one_row_per_match=args.one_row_per_match)
         summary.column_matches = output.count_column_matches(rows)
-        _write_outputs(args, stage2_rows=rows)
+        _write_outputs(args, rows)
 
     if not args.no_summary:
         print(output.format_summary(summary), file=sys.stderr)

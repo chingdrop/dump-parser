@@ -1,88 +1,52 @@
-"""Output writers: CSV, JSON, and a console summary report."""
+"""Output writers: CSV, JSON, and a console summary report.
+
+Writers take a :class:`pandas.DataFrame` directly and delegate to
+``DataFrame.to_csv`` / ``to_json``, so serialisation is a single vectorized
+call rather than a Python loop writing one row at a time.
+"""
 
 from __future__ import annotations
 
-import csv
-import json
-from typing import Iterable, List, Sequence
+import pandas as pd
 
-from .models import OUTPUT_COLUMNS, ScanSummary, Stage1Match, Stage2Row
+from .models import OUTPUT_COLUMNS, STAGE1_COLUMNS, ScanSummary
 from .patterns import FIELD_PATTERNS
 
 
-def write_stage2_csv(rows: Sequence[Stage2Row], path: str) -> None:
-    """Write Stage 2 rows to ``path`` as CSV using :data:`OUTPUT_COLUMNS`."""
-
-    with open(path, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=list(OUTPUT_COLUMNS))
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row.as_dict())
+def write_csv(df: pd.DataFrame, path: str) -> None:
+    df.to_csv(path, index=False)
 
 
-def write_stage2_json(rows: Sequence[Stage2Row], path: str) -> None:
-    """Write Stage 2 rows to ``path`` as a JSON array of objects."""
-
-    with open(path, "w", encoding="utf-8") as fh:
-        json.dump([row.as_dict() for row in rows], fh, indent=2, ensure_ascii=False)
+def write_json(df: pd.DataFrame, path: str) -> None:
+    df.to_json(path, orient="records", indent=2, force_ascii=False)
 
 
-def write_stage1_csv(matches: Sequence[Stage1Match], path: str) -> None:
-    """Write raw Stage 1 matches to ``path`` (used by ``--stage1-only``)."""
-
-    fieldnames = ["file", "line_number", "matched_text", "pattern", "source_line"]
-    with open(path, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=fieldnames)
-        writer.writeheader()
-        for m in matches:
-            writer.writerow(m.as_dict())
-
-
-def write_stage1_json(matches: Sequence[Stage1Match], path: str) -> None:
-    with open(path, "w", encoding="utf-8") as fh:
-        json.dump([m.as_dict() for m in matches], fh, indent=2, ensure_ascii=False)
-
-
-def read_stage1(path: str) -> List[Stage1Match]:
-    """Load a Stage 1 dump (CSV or JSON) back into records for ``--stage2-only``."""
+def read_stage1(path: str) -> pd.DataFrame:
+    """Load a Stage 1 dump (CSV or JSON) back into a DataFrame for ``--stage2-only``."""
 
     if path.lower().endswith(".json"):
-        with open(path, encoding="utf-8") as fh:
-            data = json.load(fh)
-        return [
-            Stage1Match(
-                file=d["file"],
-                line_number=int(d["line_number"]),
-                matched_text=d.get("matched_text", ""),
-                pattern_name=d.get("pattern", ""),
-                source_line=d["source_line"],
-            )
-            for d in data
-        ]
-
-    with open(path, newline="", encoding="utf-8") as fh:
-        reader = csv.DictReader(fh)
-        return [
-            Stage1Match(
-                file=row["file"],
-                line_number=int(row["line_number"]),
-                matched_text=row.get("matched_text", ""),
-                pattern_name=row.get("pattern", ""),
-                source_line=row["source_line"],
-            )
-            for row in reader
-        ]
+        df = pd.read_json(path, orient="records", dtype=False)
+    else:
+        df = pd.read_csv(path, dtype={"matched_text": str, "pattern": str, "source_line": str})
+    for col in STAGE1_COLUMNS:
+        if col not in df.columns:
+            df[col] = ""
+    return df[list(STAGE1_COLUMNS)].fillna("")
 
 
-def count_column_matches(rows: Iterable[Stage2Row]) -> dict:
-    """Count non-empty extracted values per column (splitting joined cells)."""
+def count_column_matches(rows: pd.DataFrame) -> dict:
+    """Count non-empty extracted values per column (splitting pipe-joined cells).
 
-    counts = {name: 0 for name in FIELD_PATTERNS}
-    for row in rows:
-        for name in FIELD_PATTERNS:
-            cell = getattr(row, name)
-            if cell:
-                counts[name] += len([v for v in cell.split("|") if v])
+    Vectorized: for each field column, a non-empty cell's match count is
+    ``1 + (number of '|' separators)``, computed for the whole column with a
+    single ``Series.str.count`` call rather than a per-row split-and-len loop.
+    """
+
+    counts = {}
+    for name in FIELD_PATTERNS:
+        cell = rows[name]
+        non_empty = cell != ""
+        counts[name] = int((cell[non_empty].str.count(r"\|") + 1).sum())
     return counts
 
 

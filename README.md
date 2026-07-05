@@ -2,8 +2,11 @@
 
 A PowerGREP-style CLI for searching large, unstructured `.txt` dumps and
 extracting fields **by pattern shape rather than by delimiter**. Built on
-[Dask](https://www.dask.org/) (`dask.bag` / `dask.bytes`) for parallel,
-out-of-core processing of multi-GB / many-file inputs.
+[Dask](https://www.dask.org/) (`dask.bytes`) for parallel, out-of-core file
+handling and [pandas](https://pandas.pydata.org/) for vectorized regex
+extraction — records flow through the pipeline as DataFrames, and every field
+is pulled out with a single `Series.str` call across all rows at once rather
+than a Python loop over lines/matches.
 
 ## Why "delimiter-agnostic"?
 
@@ -73,6 +76,37 @@ The summary report lists: files scanned, lines scanned, Stage 1 matches, matches
 per column, elapsed time, files that needed an encoding fallback, and files that
 failed to read.
 
+## Why pandas, and where the vectorization actually happens
+
+The pipeline used to loop in plain Python over every line, then over every
+field pattern, then over every `finditer` match. It's been rewritten so each
+stage does the equivalent work as a small number of vectorized `pandas`
+calls instead:
+
+* **Stage 1 search** (`scanner.py`): a whole file (or block, in
+  `--blocksize` mode) is decoded once, split into a `pandas.Series` of lines,
+  and searched with `Series.str.contains` / `str.extract` — one vectorized
+  pass per search pattern (there's normally just one, `any-field`, or a
+  handful from repeated `-p` flags), never a per-line loop. Line numbers for
+  `--blocksize` mode are recovered with a vectorized `groupby("file")
+  ["line_count"].cumsum()` prefix sum instead of a manual running-offset
+  loop.
+* **Stage 2 extraction** (`extractor.py`): each of the four fields is pulled
+  from *every* matched line in one `Series.str.findall` call — four calls
+  total per run, regardless of how many lines matched. `--one-row-per-match`
+  reshapes wide-to-long with `melt` + `Series.explode`, pandas's native
+  one-row-per-list-item operation, instead of constructing output rows one
+  match at a time.
+* **Output** (`output.py`): `DataFrame.to_csv` / `to_json` write the whole
+  result in one call; the summary's per-column match counts come from a
+  single vectorized `Series.str.count("\|")` per column rather than a
+  split-and-len loop over every row.
+
+Decoding a whole file/block in one shot (rather than line-by-line) is safe
+because `\n` (0x0A) can never appear as a continuation byte inside a
+multi-byte UTF-8 character, so a newline-aligned boundary is always a valid
+decode boundary too.
+
 ## The four field patterns
 
 | Column | Shape | Delimiter-safety |
@@ -101,9 +135,9 @@ design:
 
 2. **`read_text` doesn't expose a block's file/offset**, so per-file line
    numbers can't be recovered from it alone. The scanner therefore drives
-   `read_bytes` directly (same newline-safe machinery), wraps the blocks into a
-   `dask.bag` via `db.from_delayed`, and computes global line numbers with a
-   cheap per-file prefix-sum of each block's line count.
+   `read_bytes` directly (same newline-safe machinery) and computes global line
+   numbers with a vectorized per-file prefix-sum of each block's line count
+   (`groupby("file")["line_count"].cumsum()`).
 
 Both read strategies produce identical results (tested):
 
@@ -123,14 +157,19 @@ Both read strategies produce identical results (tested):
 ```
 dump_parser/
   patterns.py    # regex definitions + delimiter-variant test cases + self-test
-  scanner.py     # Stage 1 Dask pipeline (streaming + block-splitting)
-  extractor.py   # Stage 2 pattern-based column extraction
-  output.py      # CSV / JSON / console-summary writers
-  models.py      # shared dataclasses + output schema
+  scanner.py     # Stage 1 Dask + pandas pipeline (streaming + block-splitting)
+  extractor.py   # Stage 2 vectorized pattern-based column extraction
+  output.py      # CSV / JSON / console-summary writers (DataFrame -> file)
+  models.py      # shared column-schema tuples + ScanSummary
   cli.py         # argparse entry point (stage1-only / stage2-only / full)
 tests/           # per-field regex tests + scanner + extractor + end-to-end
 sample_data/     # mixed-delimiter samples (incl. a latin-1 file)
 ```
+
+Every stage boundary in this pipeline is a `pandas.DataFrame`: `scanner.scan_paths`
+returns one with `STAGE1_COLUMNS`, `extractor.build_stage2_frame` returns one
+with `OUTPUT_COLUMNS`, and `output.py`/`cli.py` just read/write that frame —
+there's no intermediate per-row object model to keep in sync.
 
 ## Tests
 

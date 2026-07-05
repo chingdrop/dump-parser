@@ -5,6 +5,7 @@ description = "PowerGREP-style CLI for searching large unstructured .txt dumps a
 requires-python = ">=3.10"
 dependencies = [
     "dask[bag]>=2024.1.0",
+    "pandas>=2.3.3",
 ]
 
 [project.scripts]
