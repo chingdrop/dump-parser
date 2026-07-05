@@ -1,0 +1,3 @@
+user01@corp.net|https://corp.net/dashboard|Storm21@|Thunder99
+admin@corp.net|www.corp.net/login|Blaze07|Frost88@
+support@corp.net|https://corp.net/help?topic=billing#faq|Comet44@|Nova12

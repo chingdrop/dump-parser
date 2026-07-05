@@ -1,0 +1,8 @@
+jane@acme.io,https://acme.io/profile,Eagles211@,Falcons88
+bob.smith@sub.example.co.uk https://shop.example.com/item?id=42 Ravens77 Hawks909@
+carol@mail-server.org|www.blog.example.com|Bears00@|Lions55
+dave+news@acme.io:https://docs.acme.io/guide#intro:Tigers12:Panthers34@
+mixed ,|:erin@acme.io:| |https://acme.io/q?x=1&y=2| ,Sharks01@, :Wolves42:
+no fields on this line, just some prose about nothing in particular
+frank@acme.io and also visit www.acme.io:Eagles211 for the Eagles211@ token
+grace@acme.io, https://acme.io/a, https://acme.io/b, Colts03@, Colts03@, Jets88
