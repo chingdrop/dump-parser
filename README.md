@@ -31,11 +31,11 @@ the venv (`source .venv/bin/activate`) and drop the prefix.
 ## Usage
 
 ```bash
-# Full pipeline over a directory (recursive), CSV + JSON output
-uv run dump-parser sample_data -o out/results --format both
+# Full pipeline over a directory (recursive), CSV output
+uv run dump-parser sample_data -o out/results
 
-# Stage 1 only — dump the lines that matched, for later processing
-uv run dump-parser sample_data --stage1-only -o out/hits.csv
+# Stage 1 only — search for a specific domain and dump the matching lines
+uv run dump-parser sample_data -p '@blueshiftdefense.com' --stage1-only -o out/hits.csv
 
 # Stage 2 only — parse a previously saved Stage 1 dump into columns
 uv run dump-parser out/hits.csv --stage2-only -o out/parsed.csv
@@ -44,8 +44,8 @@ uv run dump-parser out/hits.csv --stage2-only -o out/parsed.csv
 # parallelism, and emit one row per individual match
 uv run dump-parser big.txt --blocksize 64MB --one-row-per-match -o out/r
 
-# Custom Stage 1 search patterns (repeatable); true CPU parallelism
-uv run dump-parser dumps/ -p 'ACCT\d{6}' -p '(?i)password' --scheduler processes
+# Multiple Stage 1 search patterns (repeatable)
+uv run dump-parser dumps/ -p 'ACCT\d{6}' -p '(?i)password'
 ```
 
 `uv run python -m dump_parser ...` works identically to the `dump-parser`
@@ -60,15 +60,14 @@ printed to stderr (suppress with `--no-summary`).
 |------|---------|
 | `-p/--pattern REGEX` | Stage 1 search regex (repeatable). Default: any line with an email, link, or custom token. |
 | `--blocksize 64MB` | Split large files into newline-aligned blocks for intra-file parallelism. Default: one task per file. |
-| `--scheduler` | `threads` (default), `processes` (true CPU parallelism for regex), or `synchronous`. |
+| `--scheduler` | `processes` (default — true CPU parallelism for regex, for PowerGREP-like speed), `threads`, or `synchronous`. |
 | `--one-row-per-match` | Emit one row per match instead of pipe-joining matches into a cell. |
 | `--fallback-encoding` | Encoding for non-UTF-8 lines (default `latin-1`). |
 | `--stage1-only` / `--stage2-only` | Run a single stage. |
-| `--format csv\|json\|both` | Output format. |
 
 ## Output
 
-Stage 2 columns: `file, line_number, email, link, custom_field_1,
+CSV only, columns: `file, line_number, email, link, custom_field_1,
 custom_field_2, source_line`. A line with multiple matches for one category is
 pipe-joined into the cell by default, or exploded with `--one-row-per-match`.
 
@@ -97,10 +96,10 @@ calls instead:
   reshapes wide-to-long with `melt` + `Series.explode`, pandas's native
   one-row-per-list-item operation, instead of constructing output rows one
   match at a time.
-* **Output** (`output.py`): `DataFrame.to_csv` / `to_json` write the whole
-  result in one call; the summary's per-column match counts come from a
-  single vectorized `Series.str.count("\|")` per column rather than a
-  split-and-len loop over every row.
+* **Output** (`output.py`): `DataFrame.to_csv` writes the whole result in one
+  call; the summary's per-column match counts come from a single vectorized
+  `Series.str.count("\|")` per column rather than a split-and-len loop over
+  every row.
 
 Decoding a whole file/block in one shot (rather than line-by-line) is safe
 because `\n` (0x0A) can never appear as a continuation byte inside a
@@ -146,11 +145,15 @@ Both read strategies produce identical results (tested):
 * `blocksize=<bytes>` — newline-aligned blocks per file, parallel *within* one
   large file. Best for a single multi-GB file.
 
-> **Scheduler note.** `dask.bag` defaults to the multiprocessing scheduler,
-> which requires an import-safe `__main__` entry point. This CLI provides one
-> (`python -m dump_parser`). The library default is `threads` (safe everywhere);
-> use `--scheduler processes` for true CPU-bound regex parallelism. Because
-> Python's `re` holds the GIL, `threads` mainly overlaps I/O.
+> **Scheduler note.** The CLI defaults to `--scheduler processes` for true
+> CPU-bound regex parallelism (Python's `re` holds the GIL, so `threads`
+> mainly overlaps I/O — not what you want if you came from PowerGREP expecting
+> multi-core speed). Multiprocessing needs an import-safe `__main__` entry
+> point, which both `dump-parser` (the installed console script) and
+> `python -m dump_parser` provide. The underlying library function
+> `scanner.scan_paths()` defaults to `threads` instead, since arbitrary
+> programmatic callers (scripts, notebooks) aren't guaranteed to have that
+> guard — pass `scheduler="processes"` explicitly if yours does.
 
 ## Project layout
 
@@ -159,7 +162,7 @@ dump_parser/
   patterns.py    # regex definitions + delimiter-variant test cases + self-test
   scanner.py     # Stage 1 Dask + pandas pipeline (streaming + block-splitting)
   extractor.py   # Stage 2 vectorized pattern-based column extraction
-  output.py      # CSV / JSON / console-summary writers (DataFrame -> file)
+  output.py      # CSV writer + console-summary formatter (DataFrame -> file)
   models.py      # shared column-schema tuples + ScanSummary
   cli.py         # Click entry point (stage1-only / stage2-only / full)
 tests/           # per-field regex tests + scanner + extractor + end-to-end
@@ -180,4 +183,4 @@ uv run pytest -q
 Covers every regex field across comma/space/pipe/colon/mixed delimiters,
 delimiter-bleed regressions, block-vs-streaming equivalence, line-number
 correctness, encoding fallback, unreadable-file handling, and an end-to-end
-Stage 1 → Stage 2 → CSV/JSON run through the CLI.
+Stage 1 → Stage 2 → CSV run through the CLI.

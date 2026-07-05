@@ -2,11 +2,11 @@
 
 Examples::
 
-    # Full pipeline over a directory, CSV + JSON out
-    dump-parser data/ -o out/results --format both
+    # Full pipeline over a directory, CSV out
+    dump-parser data/ -o out/results
 
-    # Stage 1 only: dump matched lines for later processing
-    dump-parser data/ --stage1-only -o out/hits.csv
+    # Stage 1 only: search for a domain and dump matched lines
+    dump-parser data/ -p '@blueshiftdefense.com' --stage1-only -o out/hits.csv
 
     # Stage 2 only: parse a previously saved Stage 1 dump
     dump-parser out/hits.csv --stage2-only -o out/parsed.csv
@@ -29,11 +29,11 @@ from .models import ScanSummary
 
 _EXAMPLES = """\b
 Examples:
-  dump-parser data/ -o out/results --format both
-  dump-parser data/ --stage1-only -o out/hits.csv
+  dump-parser data/ -o out/results
+  dump-parser data/ -p '@blueshiftdefense.com' --stage1-only -o out/hits.csv
   dump-parser out/hits.csv --stage2-only -o out/parsed.csv
   dump-parser big.txt --blocksize 64MB --one-row-per-match -o out/r
-  dump-parser dumps/ -p 'ACCT\\d{6}' -p '(?i)password' --scheduler processes
+  dump-parser dumps/ -p 'ACCT\\d{6}' -p '(?i)password'
 """
 
 
@@ -71,8 +71,8 @@ def _with_ext(base: str, ext: str) -> str:
     return base if base.lower().endswith(ext) else base + ext
 
 
-def _write_outputs(df, output_base: Optional[str], fmt: str) -> None:
-    """Write ``df`` to files (if ``output_base`` given) or stdout (CSV)."""
+def _write_outputs(df, output_base: Optional[str]) -> None:
+    """Write ``df`` as CSV to a file (if ``output_base`` given) or stdout."""
 
     if output_base is None:
         df.to_csv(sys.stdout, index=False)
@@ -81,11 +81,7 @@ def _write_outputs(df, output_base: Optional[str], fmt: str) -> None:
     out_dir = os.path.dirname(output_base)
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
-
-    if fmt in ("csv", "both"):
-        output.write_csv(df, _with_ext(output_base, ".csv"))
-    if fmt in ("json", "both"):
-        output.write_json(df, _with_ext(output_base, ".json"))
+    output.write_csv(df, _with_ext(output_base, ".csv"))
 
 
 @click.command(
@@ -95,16 +91,8 @@ def _write_outputs(df, output_base: Optional[str], fmt: str) -> None:
 @click.argument("input_path", metavar="INPUT")
 @click.option(
     "-o", "--output", "output_base",
-    help="Output path base. Extension is added per format "
-         "(e.g. '-o out/r' -> out/r.csv, out/r.json). If omitted, results go to "
-         "stdout as CSV.",
-)
-@click.option(
-    "--format", "fmt",
-    type=click.Choice(("csv", "json", "both")),
-    default="csv",
-    show_default=True,
-    help="Output format.",
+    help="Output path base; '.csv' is added if not already present "
+         "(e.g. '-o out/r' -> out/r.csv). If omitted, results go to stdout as CSV.",
 )
 @click.option(
     "-p", "--pattern", "patterns",
@@ -129,9 +117,10 @@ def _write_outputs(df, output_base: Optional[str], fmt: str) -> None:
 @click.option(
     "--scheduler",
     type=click.Choice(("threads", "processes", "synchronous")),
-    default="threads",
+    default="processes",
     show_default=True,
-    help="Dask scheduler. 'processes' gives true CPU parallelism for regex.",
+    help="Dask scheduler. 'processes' gives true CPU parallelism for regex "
+    "(the default, for PowerGREP-like speed); 'threads' mainly overlaps I/O.",
 )
 @click.option(
     "--one-row-per-match",
@@ -147,7 +136,7 @@ def _write_outputs(df, output_base: Optional[str], fmt: str) -> None:
 @click.option(
     "--stage2-only",
     is_flag=True,
-    help="Run only Stage 2 (extraction) on a Stage 1 CSV/JSON dump.",
+    help="Run only Stage 2 (extraction) on a Stage 1 CSV dump.",
 )
 @click.option(
     "--no-summary",
@@ -157,7 +146,6 @@ def _write_outputs(df, output_base: Optional[str], fmt: str) -> None:
 def _cli(
         input_path: str,
         output_base: Optional[str],
-        fmt: str,
         patterns: Tuple[str, ...],
         blocksize: Optional[int],
         fallback_encoding: str,
@@ -171,7 +159,7 @@ def _cli(
     (delimiter-agnostic), using Dask for parallel/out-of-core work.
 
     INPUT is a .txt file or a directory (searched recursively). With
-    --stage2-only, INPUT is a Stage 1 CSV/JSON dump instead.
+    --stage2-only, INPUT is a Stage 1 CSV dump instead.
     """
 
     if stage1_only and stage2_only:
@@ -197,11 +185,11 @@ def _cli(
         )
 
     if stage1_only:
-        _write_outputs(matches, output_base, fmt)
+        _write_outputs(matches, output_base)
     else:
         rows = extractor.build_stage2_frame(matches, one_row_per_match=one_row_per_match)
         summary.column_matches = output.count_column_matches(rows)
-        _write_outputs(rows, output_base, fmt)
+        _write_outputs(rows, output_base)
 
     if not no_summary:
         print(output.format_summary(summary), file=sys.stderr)

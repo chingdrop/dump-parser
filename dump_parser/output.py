@@ -1,8 +1,8 @@
-"""Output writers: CSV, JSON, and a console summary report.
+"""Output writers: CSV and a console summary report.
 
 Writers take a :class:`pandas.DataFrame` directly and delegate to
-``DataFrame.to_csv`` / ``to_json``, so serialisation is a single vectorized
-call rather than a Python loop writing one row at a time.
+``DataFrame.to_csv``, so serialisation is a single vectorized call rather than
+a Python loop writing one row at a time.
 """
 
 from __future__ import annotations
@@ -17,17 +17,10 @@ def write_csv(df: pd.DataFrame, path: str) -> None:
     df.to_csv(path, index=False)
 
 
-def write_json(df: pd.DataFrame, path: str) -> None:
-    df.to_json(path, orient="records", indent=2, force_ascii=False)
-
-
 def read_stage1(path: str) -> pd.DataFrame:
-    """Load a Stage 1 dump (CSV or JSON) back into a DataFrame for ``--stage2-only``."""
+    """Load a Stage 1 CSV dump back into a DataFrame for ``--stage2-only``."""
 
-    if path.lower().endswith(".json"):
-        df = pd.read_json(path, orient="records", dtype=False)
-    else:
-        df = pd.read_csv(path, dtype={"matched_text": str, "pattern": str, "source_line": str})
+    df = pd.read_csv(path, dtype={"matched_text": str, "pattern": str, "source_line": str})
     for col in STAGE1_COLUMNS:
         if col not in df.columns:
             df[col] = ""
