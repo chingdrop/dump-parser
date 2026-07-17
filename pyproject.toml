@@ -15,6 +15,10 @@ dump-parser = "dump_parser.cli:main"
 [dependency-groups]
 dev = [
     "pytest>=7.0",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "pandas-stubs>=2.2",
+    "pre-commit>=4.0",
 ]
 
 [build-system]
@@ -23,3 +27,22 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/dump_parser"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+# numpy's stubs use PEP 695 `type` statements unconditionally, which mypy can
+# only parse under python_version >= 3.12 -- this doesn't change the package's
+# actual supported floor (requires-python above stays >=3.10).
+python_version = "3.12"
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true

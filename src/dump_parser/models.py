@@ -9,10 +9,9 @@ over rows. These tuples define the column order each stage produces/expects.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
 
 # Columns of the Stage 1 (search) result DataFrame.
-STAGE1_COLUMNS: Tuple[str, ...] = (
+STAGE1_COLUMNS: tuple[str, ...] = (
     "file",
     "line_number",
     "matched_text",
@@ -22,7 +21,7 @@ STAGE1_COLUMNS: Tuple[str, ...] = (
 
 # Columns of the Stage 2 (extraction) output DataFrame — CSV header, JSON key
 # order, console table order.
-OUTPUT_COLUMNS: Tuple[str, ...] = (
+OUTPUT_COLUMNS: tuple[str, ...] = (
     "file",
     "line_number",
     "email",
@@ -41,9 +40,9 @@ class ScanSummary:
     lines_scanned: int = 0
     stage1_matches: int = 0
     # Per-column match totals for Stage 2, keyed by column name.
-    column_matches: Dict[str, int] = field(default_factory=dict)
+    column_matches: dict[str, int] = field(default_factory=dict)
     # (path, reason) for every file that could not be read.
-    failed_files: List[Tuple[str, str]] = field(default_factory=list)
+    failed_files: list[tuple[str, str]] = field(default_factory=list)
     # Files that decoded only after falling back off UTF-8.
-    fallback_files: List[str] = field(default_factory=list)
+    fallback_files: list[str] = field(default_factory=list)
     elapsed_seconds: float = 0.0

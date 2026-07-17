@@ -14,9 +14,7 @@ SYNC = {"scheduler": "synchronous"}
 @pytest.fixture
 def dump_dir(tmp_path):
     (tmp_path / "a.txt").write_text(
-        "jane@acme.io,Eagles211@\n"
-        "no fields here\n"
-        "pipe|https://acme.io/x|Falcons88\n",
+        "jane@acme.io,Eagles211@\nno fields here\npipe|https://acme.io/x|Falcons88\n",
         encoding="utf-8",
     )
     sub = tmp_path / "sub"
@@ -33,7 +31,7 @@ def test_discovers_txt_recursively(dump_dir):
 
 def test_line_numbers_are_correct(dump_dir):
     df, summary = scanner.scan_paths(str(dump_dir), **SYNC)
-    by_line = set(zip(df["file"].apply(os.path.basename), df["line_number"]))
+    by_line = set(zip(df["file"].apply(os.path.basename), df["line_number"], strict=True))
     assert ("a.txt", 1) in by_line
     assert ("a.txt", 3) in by_line  # blank/no-field line 2 is skipped, numbering intact
     assert ("b.txt", 1) in by_line
@@ -45,7 +43,10 @@ def test_blockwise_matches_streaming(dump_dir):
     df_stream, _ = scanner.scan_paths(str(dump_dir), **SYNC)
     # Tiny blocksize forces splits mid-line and mid-file.
     df_block, _ = scanner.scan_paths(str(dump_dir), blocksize=16, **SYNC)
-    key = lambda df: sorted(zip(df["file"], df["line_number"], df["source_line"]))
+
+    def key(df):
+        return sorted(zip(df["file"], df["line_number"], df["source_line"], strict=True))
+
     assert key(df_stream) == key(df_block)
 
 

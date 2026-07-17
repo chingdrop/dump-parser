@@ -39,12 +39,8 @@ def test_dedup_within_cell():
 
 
 def test_one_row_per_match_explodes():
-    df = build_stage2_frame(
-        _stage1_df(["a@x.io https://x.io/p Eagles211@"]), one_row_per_match=True
-    )
-    values = set(
-        zip(df["email"], df["link"], df["custom_field_1"], df["custom_field_2"])
-    )
+    df = build_stage2_frame(_stage1_df(["a@x.io https://x.io/p Eagles211@"]), one_row_per_match=True)
+    values = set(zip(df["email"], df["link"], df["custom_field_1"], df["custom_field_2"], strict=True))
     assert ("a@x.io", "", "", "") in values
     assert ("", "https://x.io/p", "", "") in values
     assert ("", "", "Eagles211@", "") in values

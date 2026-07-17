@@ -22,17 +22,14 @@ def _extract(field_name, line):
 
 @pytest.mark.parametrize(
     "field_name,line,expected",
-    [
-        (fn, line, expected)
-        for fn, cases in TEST_CASES.items()
-        for line, expected in cases
-    ],
+    [(fn, line, expected) for fn, cases in TEST_CASES.items() for line, expected in cases],
 )
 def test_table_cases(field_name, line, expected):
     assert _extract(field_name, line) == expected
 
 
 # --- Delimiter-bleed regressions -----------------------------------------
+
 
 @pytest.mark.parametrize("delim", [",", " ", "|", ":"])
 def test_email_all_delimiters(delim):

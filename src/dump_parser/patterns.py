@@ -25,7 +25,7 @@ The separator set is intentionally: whitespace, ``,``, ``|``, ``:``.
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Pattern, Tuple
+from re import Pattern
 
 # ---------------------------------------------------------------------------
 # Email
@@ -80,7 +80,7 @@ def strip_url(match: str) -> str:
     result = match.rstrip(_URL_TRAILING)
     # Restore a single closing bracket if it is balanced inside the URL, e.g.
     # a Wikipedia-style ``.../Foo_(bar)`` should keep its ``)``.
-    if match[len(result):].startswith(")") and result.count("(") > result.count(")"):
+    if match[len(result) :].startswith(")") and result.count("(") > result.count(")"):
         result += ")"
     return result
 
@@ -110,7 +110,7 @@ CUSTOM_FIELD_1_RE: Pattern[str] = re.compile(_CUSTOM_TOKEN)
 CUSTOM_FIELD_2_RE: Pattern[str] = re.compile(_CUSTOM_TOKEN)
 
 # Registry consumed by the extractor. Order defines column order.
-FIELD_PATTERNS: Dict[str, Pattern[str]] = {
+FIELD_PATTERNS: dict[str, Pattern[str]] = {
     "email": EMAIL_RE,
     "link": URL_RE,
     "custom_field_1": CUSTOM_FIELD_1_RE,
@@ -125,9 +125,7 @@ def default_search_pattern() -> Pattern[str]:
     "interesting" if it contains at least one extractable field.
     """
 
-    return re.compile(
-        "|".join(f"(?:{p.pattern})" for p in FIELD_PATTERNS.values())
-    )
+    return re.compile("|".join(f"(?:{p.pattern})" for p in FIELD_PATTERNS.values()))
 
 
 # ---------------------------------------------------------------------------
@@ -136,7 +134,7 @@ def default_search_pattern() -> Pattern[str]:
 # Each entry: (input_line, expected_matches). The same field type is presented
 # separated by commas, spaces, pipes, colons and mixtures. These are asserted in
 # tests/test_patterns.py and can be run directly (see __main__ below).
-TEST_CASES: Dict[str, List[Tuple[str, List[str]]]] = {
+TEST_CASES: dict[str, list[tuple[str, list[str]]]] = {
     "email": [
         ("comma,jane@acme.io,end", ["jane@acme.io"]),
         ("space jane@acme.io end", ["jane@acme.io"]),

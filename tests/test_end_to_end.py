@@ -54,10 +54,13 @@ def test_cli_domain_search_pattern(tmp_path):
     cli.main(
         [
             str(tmp_path),
-            "-p", "@blueshiftdefense.com",
+            "-p",
+            "@blueshiftdefense.com",
             "--stage1-only",
-            "-o", str(stage1),
-            "--scheduler", "synchronous",
+            "-o",
+            str(stage1),
+            "--scheduler",
+            "synchronous",
             "--no-summary",
         ]
     )
@@ -84,7 +87,5 @@ def test_cli_blockwise_equivalent(tmp_path):
     base_a = tmp_path / "stream"
     base_b = tmp_path / "block"
     cli.main([str(tmp_path), "-o", str(base_a), "--scheduler", "synchronous", "--no-summary"])
-    cli.main(
-        [str(tmp_path), "-o", str(base_b), "--blocksize", "24", "--scheduler", "synchronous", "--no-summary"]
-    )
+    cli.main([str(tmp_path), "-o", str(base_b), "--blocksize", "24", "--scheduler", "synchronous", "--no-summary"])
     assert (tmp_path / "stream.csv").read_text() == (tmp_path / "block.csv").read_text()

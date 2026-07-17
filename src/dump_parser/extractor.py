@@ -44,9 +44,7 @@ def extract_fields(source_lines: pd.Series) -> pd.DataFrame:
     return pd.DataFrame(columns, index=source_lines.index)
 
 
-def build_stage2_frame(
-        stage1_df: pd.DataFrame, one_row_per_match: bool = False
-) -> pd.DataFrame:
+def build_stage2_frame(stage1_df: pd.DataFrame, one_row_per_match: bool = False) -> pd.DataFrame:
     """Turn a Stage 1 matches DataFrame into the Stage 2 output DataFrame.
 
     Args:
@@ -89,9 +87,7 @@ def _explode_long(base: pd.DataFrame, fields: pd.DataFrame) -> pd.DataFrame:
 
     field_names = list(fields.columns)
     long = (
-        fields.reset_index(names="_idx")
-        .melt(id_vars="_idx", var_name="_column", value_name="_match")
-        .explode("_match")
+        fields.reset_index(names="_idx").melt(id_vars="_idx", var_name="_column", value_name="_match").explode("_match")
     )
     matched = long[long["_match"].notna() & (long["_match"] != "")]
 

@@ -33,7 +33,8 @@ from __future__ import annotations
 import os
 import re
 import time
-from typing import Dict, List, Optional, Pattern, Sequence, Tuple
+from collections.abc import Sequence
+from re import Pattern
 
 import dask
 import numpy as np
@@ -44,7 +45,7 @@ from .models import STAGE1_COLUMNS, ScanSummary
 from .patterns import default_search_pattern
 
 
-def discover_files(path: str) -> List[str]:
+def discover_files(path: str) -> list[str]:
     """Return a sorted list of ``.txt`` files under ``path``.
 
     ``path`` may be a single ``.txt`` file or a directory that is searched
@@ -54,7 +55,7 @@ def discover_files(path: str) -> List[str]:
     if os.path.isfile(path):
         return [path]
     if os.path.isdir(path):
-        found: List[str] = []
+        found: list[str] = []
         for root, _dirs, files in os.walk(path):
             for name in files:
                 if name.lower().endswith(".txt"):
@@ -63,7 +64,7 @@ def discover_files(path: str) -> List[str]:
     raise FileNotFoundError(f"No such file or directory: {path!r}")
 
 
-def _decode_whole(data: bytes, fallback: str) -> Tuple[str, bool]:
+def _decode_whole(data: bytes, fallback: str) -> tuple[str, bool]:
     """Decode a full file/block: UTF-8 first, then ``fallback``.
 
     Returns ``(text, used_fallback)``. Safe to do in one shot because a
@@ -90,9 +91,7 @@ def _split_lines(text: str) -> pd.Series:
     return pd.Series(lines, dtype="object").str.rstrip("\r")
 
 
-def _vectorized_search(
-        lines: pd.Series, patterns: Sequence[Tuple[str, Pattern[str]]]
-) -> Tuple[pd.Series, pd.Series]:
+def _vectorized_search(lines: pd.Series, patterns: Sequence[tuple[str, Pattern[str]]]) -> tuple[pd.Series, pd.Series]:
     """Find the first matching search pattern per line, vectorized.
 
     Loops only over ``patterns`` (typically one, occasionally a handful of
@@ -127,10 +126,10 @@ def _vectorized_search(
 
 
 def _hits_frame(
-        lines: pd.Series,
-        matched_pattern: pd.Series,
-        matched_text: pd.Series,
-        extra_columns: Dict[str, object],
+    lines: pd.Series,
+    matched_pattern: pd.Series,
+    matched_text: pd.Series,
+    extra_columns: dict[str, object],
 ) -> pd.DataFrame:
     """Assemble a hits DataFrame from vectorized search results via boolean
     indexing (no per-line Python loop)."""
@@ -149,9 +148,9 @@ def _hits_frame(
 
 
 def _scan_file_streaming(
-        path: str,
-        patterns: Sequence[Tuple[str, Pattern[str]]],
-        fallback: str,
+    path: str,
+    patterns: Sequence[tuple[str, Pattern[str]]],
+    fallback: str,
 ) -> dict:
     """Read, decode and search one whole file in a single vectorized pass."""
 
@@ -175,10 +174,10 @@ def _scan_file_streaming(
 
 
 def _scan_block(
-        block: bytes,
-        patterns: Sequence[Tuple[str, Pattern[str]]],
-        fallback: str,
-) -> Tuple[int, bool, pd.DataFrame]:
+    block: bytes,
+    patterns: Sequence[tuple[str, Pattern[str]]],
+    fallback: str,
+) -> tuple[int, bool, pd.DataFrame]:
     """Decode and search one newline-aligned byte block.
 
     Returns ``(line_count, used_fallback, hits)`` where ``hits`` has columns
@@ -195,20 +194,20 @@ def _scan_block(
 
 
 def _compile_patterns(
-        patterns: Optional[Sequence[Tuple[str, Pattern[str]]]],
-) -> List[Tuple[str, Pattern[str]]]:
+    patterns: Sequence[tuple[str, Pattern[str]]] | None,
+) -> list[tuple[str, Pattern[str]]]:
     if patterns:
         return list(patterns)
     return [("any-field", default_search_pattern())]
 
 
 def scan_paths(
-        path: str,
-        patterns: Optional[Sequence[Tuple[str, Pattern[str]]]] = None,
-        blocksize: Optional[int] = None,
-        fallback_encoding: str = "latin-1",
-        scheduler: str = "threads",
-) -> Tuple[pd.DataFrame, ScanSummary]:
+    path: str,
+    patterns: Sequence[tuple[str, Pattern[str]]] | None = None,
+    blocksize: int | None = None,
+    fallback_encoding: str = "latin-1",
+    scheduler: str = "threads",
+) -> tuple[pd.DataFrame, ScanSummary]:
     """Run Stage 1 over ``path``.
 
     Args:
@@ -246,11 +245,11 @@ def scan_paths(
 
 
 def _run_streaming(
-        files: Sequence[str],
-        compiled: Sequence[Tuple[str, Pattern[str]]],
-        fallback: str,
-        scheduler: str,
-        summary: ScanSummary,
+    files: Sequence[str],
+    compiled: Sequence[tuple[str, Pattern[str]]],
+    fallback: str,
+    scheduler: str,
+    summary: ScanSummary,
 ) -> pd.DataFrame:
     if not files:
         return pd.DataFrame(columns=list(STAGE1_COLUMNS))
@@ -259,7 +258,7 @@ def _run_streaming(
     results = list(dask.compute(*tasks, scheduler=scheduler))
 
     frames = []
-    for path, res in zip(files, results):
+    for path, res in zip(files, results, strict=True):
         if res["failed"]:
             summary.failed_files.append((path, res["reason"]))
             continue
@@ -275,16 +274,16 @@ def _run_streaming(
 
 
 def _run_blockwise(
-        files: Sequence[str],
-        compiled: Sequence[Tuple[str, Pattern[str]]],
-        blocksize: int,
-        fallback: str,
-        scheduler: str,
-        summary: ScanSummary,
+    files: Sequence[str],
+    compiled: Sequence[tuple[str, Pattern[str]]],
+    blocksize: int,
+    fallback: str,
+    scheduler: str,
+    summary: ScanSummary,
 ) -> pd.DataFrame:
     delayeds = []
-    meta_records: List[Tuple[str, int]] = []  # (file, block_index), aligned with delayeds
-    readable_files: List[str] = []
+    meta_records: list[tuple[str, int]] = []  # (file, block_index), aligned with delayeds
+    readable_files: list[str] = []
 
     for path in files:
         try:
@@ -314,22 +313,19 @@ def _run_blockwise(
     block_meta = block_meta.sort_values(["file", "block_index"], kind="stable")
     # Vectorized prefix sum of line counts per file, replacing a manual
     # per-block running-offset accumulator.
-    block_meta["offset"] = (
-            block_meta.groupby("file")["line_count"].cumsum() - block_meta["line_count"]
-    )
+    block_meta["offset"] = block_meta.groupby("file")["line_count"].cumsum() - block_meta["line_count"]
 
     summary.lines_scanned = int(block_meta["line_count"].sum())
     fallback_by_file = block_meta.groupby("file")["used_fallback"].any()
     summary.fallback_files = list(fallback_by_file[fallback_by_file].index)
 
     hit_frames = []
-    for row in block_meta.itertuples(index=False):
-        hits = row.hits_df
+    for file_, offset, hits in zip(block_meta["file"], block_meta["offset"], block_meta["hits_df"], strict=True):
         if hits.empty:
             continue
         hits = hits.copy()
-        hits["file"] = row.file
-        hits["line_number"] = hits["line_number"] + row.offset
+        hits["file"] = file_
+        hits["line_number"] = hits["line_number"] + offset
         hit_frames.append(hits)
 
     if not hit_frames:
