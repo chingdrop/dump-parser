@@ -158,7 +158,7 @@ Both read strategies produce identical results (tested):
 ## Project layout
 
 ```
-dump_parser/
+src/dump_parser/
   patterns.py    # regex definitions + delimiter-variant test cases + self-test
   scanner.py     # Stage 1 Dask + pandas pipeline (streaming + block-splitting)
   extractor.py   # Stage 2 vectorized pattern-based column extraction
@@ -174,11 +174,26 @@ returns one with `STAGE1_COLUMNS`, `extractor.build_stage2_frame` returns one
 with `OUTPUT_COLUMNS`, and `output.py`/`cli.py` just read/write that frame —
 there's no intermediate per-row object model to keep in sync.
 
-## Tests
+## Development
 
 ```bash
-uv run pytest -q
+uv sync                              # installs runtime + dev deps (ruff, mypy, pytest, pre-commit)
+uv run pytest -q                     # tests
+uv run ruff check src tests          # lint
+uv run ruff format src tests         # format
+uv run mypy src/dump_parser          # type check
+uv run pre-commit install            # one-time: run the checks above on every commit
 ```
+
+`.github/workflows/ci.yml` runs `lint` (ruff check, ruff format --check, mypy),
+`test` (pytest), and `build` (`uv build`) as separate jobs on every push to
+`main` and on PRs, against Python 3.10 — the `requires-python` floor. Note that
+`mypy`'s own `python_version` in `pyproject.toml` is pinned to 3.12 regardless
+of that floor; numpy's stubs use syntax mypy can only parse under 3.12+, so
+this is a static-analysis-only workaround, not a change to what Python
+versions the package supports.
+
+### Tests
 
 Covers every regex field across comma/space/pipe/colon/mixed delimiters,
 delimiter-bleed regressions, block-vs-streaming equivalence, line-number

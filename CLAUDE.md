@@ -4,7 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-Dependencies are managed with `uv`; there is no separate lint/build step.
+Dependencies are managed with `uv`. The package lives under `src/dump_parser`
+(src layout); tests stay flat under `tests/`.
 
 ```bash
 uv sync                                    # install/update the venv from uv.lock
@@ -14,11 +15,28 @@ uv run pytest tests/test_scanner.py::test_blockwise_matches_streaming -q  # sing
 uv run python -m dump_parser.patterns      # regex self-test/demo (pass/fail per case, no pytest)
 uv run dump-parser sample_data -o out/results   # run the CLI (installed console script)
 uv run python -m dump_parser ...                # equivalent, no console script needed
+uv run ruff check src tests                # lint
+uv run ruff format src tests               # format
+uv run mypy src/dump_parser                # type check
+uv run pre-commit run --all-files          # run all pre-commit hooks locally
 ```
 
 `dump-parser` and `python -m dump_parser` are both required to work — the
 multiprocessing scheduler re-imports the entry module in worker processes, so
 any new entry point must stay behind an `if __name__ == "__main__":` guard.
+
+CI (`.github/workflows/ci.yml`) runs `lint` (ruff check, ruff format --check,
+mypy), `test` (pytest), and `build` (`uv build`) as separate jobs against
+Python 3.10 (the `requires-python` floor) on every push to `main` and PR.
+`mypy`'s own `python_version` is pinned to 3.12 in `pyproject.toml` — that's
+unrelated to the 3.10 runtime floor; numpy's stubs use PEP 695 `type`
+statements that mypy can only parse under 3.12+, so this is a static-analysis
+workaround, not a support-matrix change. The `.pre-commit-config.yaml` mypy
+hook runs in an isolated env with only `pandas-stubs` installed (not the full
+project) — code that relies on a dependency's typed `NoReturn` (e.g. a
+validator's `self.fail()`) needs an explicit `assert` afterward, since mypy
+can silently lose that narrowing when the dependency itself isn't resolvable
+in that isolated environment (see `cli.py`'s `_BlockSizeParam.convert`).
 
 ## Architecture
 
@@ -105,3 +123,11 @@ requested for PowerGREP-like speed), but the library function
 "fix" — arbitrary programmatic/notebook callers of `scan_paths()` aren't
 guaranteed to have the `if __name__ == "__main__":` guard multiprocessing
 needs, while both CLI entry points (`dump-parser`, `python -m dump_parser`) do.
+
+### zip(..., strict=True)
+
+Every `zip()` in this codebase pairs sequences that are constructed in lockstep
+(e.g. `files`/`results` from one `dask.compute()` call, or columns of the same
+DataFrame) — `strict=True` is required by the ruff config (`B905`) and is also
+a correctness check: a length mismatch here always indicates a real bug
+upstream, not a legitimate case to silently truncate.
