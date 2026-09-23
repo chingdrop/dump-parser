@@ -24,7 +24,7 @@ from re import Pattern
 
 import click
 
-from . import extractor, output, redact, scanner
+from . import extractor, output, redact, report, scanner
 from .models import ScanSummary
 
 _EXAMPLES = """\b
@@ -157,6 +157,14 @@ def _write_outputs(df, output_base: str | None) -> None:
     "plaintext and is for authorized live engagements only.",
 )
 @click.option(
+    "--report",
+    "report_path",
+    default=None,
+    metavar="PATH",
+    help="Also write a Markdown exposure/reuse report to PATH. Implies Stage 2 "
+    "output (built from the redacted frame); errors if combined with --stage1-only.",
+)
+@click.option(
     "--no-summary",
     is_flag=True,
     help="Suppress the summary report on stderr.",
@@ -172,6 +180,7 @@ def _cli(
     stage1_only: bool,
     stage2_only: bool,
     redact_output: bool,
+    report_path: str | None,
     no_summary: bool,
 ) -> int:
     """Search large unstructured .txt dumps and extract fields by pattern
@@ -183,6 +192,9 @@ def _cli(
 
     if stage1_only and stage2_only:
         raise click.UsageError("--stage1-only and --stage2-only are mutually exclusive")
+
+    if report_path is not None and stage1_only:
+        raise click.UsageError("--report cannot be combined with --stage1-only (it needs Stage 2 output)")
 
     if not redact_output:
         print(NO_REDACT_WARNING, file=sys.stderr)
@@ -215,6 +227,13 @@ def _cli(
             # Rebind so the raw frame can't reach any writer below.
             rows = redact.redact_frame(rows, redact.generate_salt())
         _write_outputs(rows, output_base)
+        if report_path is not None:
+            # Built from the (possibly redacted) frame only — never the raw frame.
+            report_dir = os.path.dirname(report_path)
+            if report_dir:
+                os.makedirs(report_dir, exist_ok=True)
+            with open(report_path, "w", encoding="utf-8") as fh:
+                fh.write(report.build_report(rows, summary))
 
     if not no_summary:
         print(output.format_summary(summary), file=sys.stderr)
