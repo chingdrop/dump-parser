@@ -11,11 +11,13 @@ than a Python loop over lines/matches.
 ## About this project
 
 This project began as a data-parsing tool used in past professional security
-work to search large, unstructured text dumps and extract structured fields
-from them. What's published here is an independent, from-scratch rebuild of
-that idea — no code or regex patterns were carried over from the original —
-doing delimiter-agnostic field extraction from large text dumps, built on
-Dask and pandas.
+work to search large, unstructured text dumps — including large public
+breach compilations such as RockYou2024 and MOAB (Mother of All Breaches) —
+and extract structured fields from them. What's published here is an
+independent, from-scratch rebuild of that idea: no code or regex patterns
+were carried over from the original, and none of that real data lives in
+this repository. It does delimiter-agnostic field extraction from large text
+dumps, built on Dask and pandas.
 [`sample_data/`](sample_data/) is hand-written and fictional, no real breach
 material; the optional demo generator
 ([`tools/gen_fixtures.py`](tools/gen_fixtures.py)) makes a larger synthetic

@@ -8,10 +8,12 @@ someone with no other context.
 ## Provenance
 
 This idea originated in past professional security work: a data-parsing tool
-used to search large, unstructured text dumps and extract structured fields
-(emails, links, password-shaped tokens) from them. No original employer or
+used to search large, unstructured text dumps — including large public
+breach compilations such as RockYou2024 and MOAB (Mother of All Breaches) —
+and extract structured fields (emails, links, password-shaped tokens) from
+them. Those names are already public knowledge; no original employer or
 client is named here, and none should be added without being already public
-knowledge.
+knowledge itself.
 
 What is published in this repository is an independent, from-scratch
 rebuild: no code or regex pattern was copied verbatim from the original
@@ -45,13 +47,20 @@ for, or reference to, a real target.
 
 **What must never be committed to this repository:**
 
-- Any real data dump, export, or scrape — of any size, from any source.
+- Any real data dump, export, or scrape — of any size, from any source,
+  including but not limited to RockYou2024, MOAB, or any other named or
+  unnamed breach compilation.
 - Anything resembling actual breach material or real credential pairs
   (emails, passwords, tokens, hashes) — even a single real row.
 - Real credentials, API keys, tokens, or secrets of any kind, for this
   project or any other system.
 - Output produced by running this tool against real data, in any form (CSV,
   the Markdown report, terminal output, screenshots).
+
+No data from RockYou2024, MOAB, or any other real breach has ever been
+present in this repository, in `sample_data/`, or in anything
+`tools/gen_fixtures.py` generates — they're named above only as context for
+the kind of data the original tool dealt with.
 
 ## Contribution rule
 
