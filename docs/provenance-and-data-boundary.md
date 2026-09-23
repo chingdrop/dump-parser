@@ -9,30 +9,21 @@ someone with no other context.
 
 This idea originated in past professional security work: a data-parsing tool
 used to search large, unstructured text dumps and extract structured fields
-(emails, links, password-shaped tokens) from them
-<!-- TODO(craig): name a specific source here only if you want to, and only
-if it's already public knowledge; otherwise leave generic -->. No original
-employer or client is named here, and none should be added without being
-already public knowledge.
+(emails, links, password-shaped tokens) from them. No original employer or
+client is named here, and none should be added without being already public
+knowledge.
 
-What is published in this repository is an independent rebuild
-<!-- TODO(craig): confirm — was this written from scratch, with no code or
-regex pattern copied verbatim from the original tool? Confirm before merge. -->.
-Concretely, "independent rebuild" is meant to mean: the architecture
-(three-stage pipeline, DataFrame-only boundaries, vectorized pandas
-throughout — see [`CLAUDE.md`](../CLAUDE.md)), the regex design in
-[`patterns.py`](../src/dump_parser/patterns.py), the CLI surface, and the
-tests were all written for this repository. If any specific detail — a
-regex shape, a column name, a design choice — was in fact carried over from
-the original tool, that should be noted here explicitly rather than left
-implied by omission
-<!-- TODO(craig): confirm before merge, and add specifics here if so -->.
+What is published in this repository is an independent, from-scratch
+rebuild: no code or regex pattern was copied verbatim from the original
+tool. The architecture (three-stage pipeline, DataFrame-only boundaries,
+vectorized pandas throughout — see [`CLAUDE.md`](../CLAUDE.md)), the regex
+design in [`patterns.py`](../src/dump_parser/patterns.py), the CLI surface,
+and the tests were all written for this repository.
 
 **Naming note.** The example domain `blueshiftdefense.com`, used throughout
 the README and the test suite as a `-p '@blueshiftdefense.com'` search
-example, is treated here as intentional self-branding for this project —
-never a placeholder for, or reference to, a real target
-<!-- TODO(craig): confirm before merge -->.
+example, is intentional self-branding for this project — never a placeholder
+for, or reference to, a real target.
 
 ## Data boundary
 

@@ -12,11 +12,10 @@ than a Python loop over lines/matches.
 
 This project began as a data-parsing tool used in past professional security
 work to search large, unstructured text dumps and extract structured fields
-from them <!-- TODO(craig): name a specific source here only if you want to,
-and only if it's already public knowledge; otherwise leave generic -->. What's
-published here is an independent rebuild <!-- TODO(craig): confirm from-scratch,
-no code/patterns reused verbatim --> of that idea: delimiter-agnostic field
-extraction from large text dumps, built on Dask and pandas.
+from them. What's published here is an independent, from-scratch rebuild of
+that idea — no code or regex patterns were carried over from the original —
+doing delimiter-agnostic field extraction from large text dumps, built on
+Dask and pandas.
 [`sample_data/`](sample_data/) is hand-written and fictional, no real breach
 material; the optional demo generator
 ([`tools/gen_fixtures.py`](tools/gen_fixtures.py)) makes a larger synthetic
