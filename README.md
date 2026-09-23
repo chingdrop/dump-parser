@@ -1,5 +1,7 @@
 # dump-parser
 
+[![CI](https://github.com/chingdrop/dump-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/chingdrop/dump-parser/actions/workflows/ci.yml)
+
 A PowerGREP-style CLI for searching large, unstructured `.txt` dumps and
 extracting fields **by pattern shape rather than by delimiter**. Built on
 [Dask](https://www.dask.org/) (`dask.bytes`) for parallel, out-of-core file
@@ -254,6 +256,13 @@ with `processes` as the default scheduler, why Click over argparse, why the
 `src/` layout, and why redaction is a salted HMAC — each as a short,
 evidence-linked record — live in
 [docs/decisions/](docs/decisions/README.md).
+
+## Security
+
+How to report a vulnerability, and the response window, are in
+[SECURITY.md](SECURITY.md). What this tool processes, the redaction
+boundary, and what's (and isn't) transmitted or written to disk are in
+[docs/threat-model.md](docs/threat-model.md).
 
 ## Development
 
