@@ -24,7 +24,7 @@ from re import Pattern
 
 import click
 
-from . import extractor, output, scanner
+from . import extractor, output, redact, report, scanner
 from .models import ScanSummary
 
 _EXAMPLES = """\b
@@ -56,6 +56,12 @@ class _BlockSizeParam(click.ParamType):
 
 
 BLOCKSIZE = _BlockSizeParam()
+
+NO_REDACT_WARNING = (
+    "WARNING: --no-redact outputs plaintext credential-shaped data. Do not use "
+    "this for demos, samples, or anything shared outside a live authorized "
+    "engagement."
+)
 
 
 def _build_search_patterns(
@@ -142,6 +148,24 @@ def _write_outputs(df, output_base: str | None) -> None:
     help="Run only Stage 2 (extraction) on a Stage 1 CSV dump.",
 )
 @click.option(
+    "--redact/--no-redact",
+    "redact_output",
+    default=True,
+    show_default=True,
+    help="Hash credential-shaped tokens with a per-run salted HMAC-SHA256 and "
+    "drop source_line (Stage 2: custom_field_1/custom_field_2; --stage1-only: "
+    "matched_text unless it's an email/link). --no-redact emits plaintext and "
+    "is for authorized live engagements only.",
+)
+@click.option(
+    "--report",
+    "report_path",
+    default=None,
+    metavar="PATH",
+    help="Also write a Markdown exposure/reuse report to PATH. Implies Stage 2 "
+    "output (built from the redacted frame); errors if combined with --stage1-only.",
+)
+@click.option(
     "--no-summary",
     is_flag=True,
     help="Suppress the summary report on stderr.",
@@ -156,6 +180,8 @@ def _cli(
     one_row_per_match: bool,
     stage1_only: bool,
     stage2_only: bool,
+    redact_output: bool,
+    report_path: str | None,
     no_summary: bool,
 ) -> int:
     """Search large unstructured .txt dumps and extract fields by pattern
@@ -168,11 +194,20 @@ def _cli(
     if stage1_only and stage2_only:
         raise click.UsageError("--stage1-only and --stage2-only are mutually exclusive")
 
+    if report_path is not None and stage1_only:
+        raise click.UsageError("--report cannot be combined with --stage1-only (it needs Stage 2 output)")
+
+    if not redact_output:
+        print(NO_REDACT_WARNING, file=sys.stderr)
+
     compiled_patterns = _build_search_patterns(patterns)
 
     if stage2_only:
         # Input is a Stage 1 dump; skip scanning.
-        matches = output.read_stage1(input_path)
+        try:
+            matches = output.read_stage1(input_path)
+        except ValueError as exc:
+            raise click.UsageError(str(exc)) from exc
         summary = ScanSummary(
             files_scanned=int(matches["file"].nunique()),
             lines_scanned=len(matches),
@@ -188,11 +223,23 @@ def _cli(
         )
 
     if stage1_only:
+        if redact_output:
+            matches = redact.redact_stage1_frame(matches, redact.generate_salt())
         _write_outputs(matches, output_base)
     else:
         rows = extractor.build_stage2_frame(matches, one_row_per_match=one_row_per_match)
         summary.column_matches = output.count_column_matches(rows)
+        if redact_output:
+            # Rebind so the raw frame can't reach any writer below.
+            rows = redact.redact_frame(rows, redact.generate_salt())
         _write_outputs(rows, output_base)
+        if report_path is not None:
+            # Built from the (possibly redacted) frame only — never the raw frame.
+            report_dir = os.path.dirname(report_path)
+            if report_dir:
+                os.makedirs(report_dir, exist_ok=True)
+            with open(report_path, "w", encoding="utf-8") as fh:
+                fh.write(report.build_report(rows, summary))
 
     if not no_summary:
         print(output.format_summary(summary), file=sys.stderr)

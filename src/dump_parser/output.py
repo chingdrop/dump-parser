@@ -21,6 +21,13 @@ def read_stage1(path: str) -> pd.DataFrame:
     """Load a Stage 1 CSV dump back into a DataFrame for ``--stage2-only``."""
 
     df = pd.read_csv(path, dtype={"matched_text": str, "pattern": str, "source_line": str})
+    if "source_line" not in df.columns:
+        raise ValueError(
+            f"{path!r} has no source_line column: it looks like it was written with "
+            "--redact (the default for --stage1-only). --stage2-only extracts fields "
+            "from source_line, so a redacted Stage 1 dump can't be used for this "
+            "roundtrip. Re-run --stage1-only with --no-redact if you need it."
+        )
     for col in STAGE1_COLUMNS:
         if col not in df.columns:
             df[col] = ""

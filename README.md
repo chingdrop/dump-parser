@@ -48,6 +48,22 @@ uv run dump-parser big.txt --blocksize 64MB --one-row-per-match -o out/r
 uv run dump-parser dumps/ -p 'ACCT\d{6}' -p '(?i)password'
 ```
 
+### Exposure Report
+
+Alongside the CSV, `--report PATH` writes a Markdown exposure/reuse report
+built from the **redacted** Stage 2 frame (so it never contains anything the
+CSV doesn't):
+
+```bash
+uv run dump-parser sample_data -o out/results --report out/report.md
+```
+
+It has two sections: an **Exposure Summary** (files/lines scanned, distinct
+emails, how many have an associated token, files contributing rows) and
+**Password Reuse** (clusters of accounts sharing a hashed token value, counted
+but never printed). `--report` implies Stage 2 output and errors if combined
+with `--stage1-only`; it works with `--stage2-only`.
+
 `uv run python -m dump_parser ...` works identically to the `dump-parser`
 console script above.
 
@@ -63,13 +79,47 @@ printed to stderr (suppress with `--no-summary`).
 | `--scheduler`                     | `processes` (default — true CPU parallelism for regex, for PowerGREP-like speed), `threads`, or `synchronous`. |
 | `--one-row-per-match`             | Emit one row per match instead of pipe-joining matches into a cell.                                            |
 | `--fallback-encoding`             | Encoding for non-UTF-8 lines (default `latin-1`).                                                              |
+| `--redact` / `--no-redact`        | Redact credential-shaped output. **`--redact` is the default** (see below); `--no-redact` opts out (warned).   |
+| `--report PATH`                    | Also write a Markdown exposure/reuse report (Stage 2 only).                                                    |
 | `--stage1-only` / `--stage2-only` | Run a single stage.                                                                                            |
 
 ## Output
 
-CSV only, columns: `file, line_number, email, link, custom_field_1,
-custom_field_2, source_line`. A line with multiple matches for one category is
-pipe-joined into the cell by default, or exploded with `--one-row-per-match`.
+CSV only. **Redaction is on by default** (a behavior change from prior
+versions). The default columns are `file, line_number, email, link,
+custom_field_1, custom_field_2` — note **no `source_line`**: the raw matched
+line is dropped because it can contain plaintext credential material. The
+`custom_field_1`/`custom_field_2` tokens are password-shaped, so each is
+replaced by a per-run salted `HMAC-SHA256` (truncated to 16 hex chars); the
+same token hashes the same way within one run (enabling reuse counting) but
+not across runs, and the salt is never written, logged, or printed. `email`
+and `link` are the exposure findings and stay visible. A line with multiple
+matches for one category is pipe-joined into the cell by default (each token
+hashed independently), or exploded with `--one-row-per-match`.
+
+`--no-redact` restores the full plaintext columns (`file, line_number, email,
+link, custom_field_1, custom_field_2, source_line`) and prints a warning to
+stderr. Use it only inside a live, authorized engagement — never for demos,
+samples, or anything shared.
+
+### Stage 1 (`--stage1-only`) redaction
+
+`--redact` also applies to `--stage1-only` output. The default columns are
+`file, line_number, matched_text, pattern` — **no `source_line`**, dropped for
+the same reason as Stage 2's. `matched_text` (whatever the search pattern
+matched — with the default any-field pattern, exactly one of the four field
+values) is hashed the same way as Stage 2's tokens, *unless* it is itself an
+email or link, which stay visible as exposure findings. `--no-redact` restores
+the full plaintext columns including `source_line`, with the same stderr
+warning.
+
+### Known limitations
+
+- A redacted `--stage1-only` dump can no longer be fed into `--stage2-only`:
+  Stage 2 extracts every field from `source_line`, which redaction removes.
+  `--stage2-only` detects this and fails with a clear error pointing at
+  `--no-redact` rather than silently returning empty fields. If you need the
+  Stage 1 → Stage 2 roundtrip, run `--stage1-only` with `--no-redact`.
 
 The summary report lists: files scanned, lines scanned, Stage 1 matches, matches
 per column, elapsed time, files that needed an encoding fallback, and files that
