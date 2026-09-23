@@ -35,7 +35,7 @@ def test_full_pipeline_rows(tmp_path):
 def test_cli_writes_csv(tmp_path):
     _make_dump(tmp_path)
     base = tmp_path / "out" / "results"
-    rc = cli.main([str(tmp_path), "-o", str(base), "--scheduler", "synchronous", "--no-summary"])
+    rc = cli.main([str(tmp_path), "-o", str(base), "--scheduler", "synchronous", "--no-summary", "--no-redact"])
     assert rc == 0
 
     csv_text = (tmp_path / "out" / "results.csv").read_text(encoding="utf-8")
@@ -75,7 +75,7 @@ def test_cli_stage1_then_stage2_roundtrip(tmp_path):
     cli.main([str(tmp_path), "--stage1-only", "-o", str(stage1), "--scheduler", "synchronous", "--no-summary"])
 
     parsed = tmp_path / "parsed.csv"
-    cli.main([str(stage1), "--stage2-only", "-o", str(parsed), "--no-summary"])
+    cli.main([str(stage1), "--stage2-only", "-o", str(parsed), "--no-summary", "--no-redact"])
 
     text = parsed.read_text(encoding="utf-8")
     assert "Eagles211@" in text
@@ -86,6 +86,8 @@ def test_cli_blockwise_equivalent(tmp_path):
     _make_dump(tmp_path)
     base_a = tmp_path / "stream"
     base_b = tmp_path / "block"
-    cli.main([str(tmp_path), "-o", str(base_a), "--scheduler", "synchronous", "--no-summary"])
-    cli.main([str(tmp_path), "-o", str(base_b), "--blocksize", "24", "--scheduler", "synchronous", "--no-summary"])
+    # --no-redact: redacted runs use a fresh salt each, so hashes differ by design.
+    common = ["--scheduler", "synchronous", "--no-summary", "--no-redact"]
+    cli.main([str(tmp_path), "-o", str(base_a), *common])
+    cli.main([str(tmp_path), "-o", str(base_b), "--blocksize", "24", *common])
     assert (tmp_path / "stream.csv").read_text() == (tmp_path / "block.csv").read_text()

@@ -24,7 +24,7 @@ from re import Pattern
 
 import click
 
-from . import extractor, output, scanner
+from . import extractor, output, redact, scanner
 from .models import ScanSummary
 
 _EXAMPLES = """\b
@@ -56,6 +56,12 @@ class _BlockSizeParam(click.ParamType):
 
 
 BLOCKSIZE = _BlockSizeParam()
+
+NO_REDACT_WARNING = (
+    "WARNING: --no-redact outputs plaintext credential-shaped data. Do not use "
+    "this for demos, samples, or anything shared outside a live authorized "
+    "engagement."
+)
 
 
 def _build_search_patterns(
@@ -142,6 +148,15 @@ def _write_outputs(df, output_base: str | None) -> None:
     help="Run only Stage 2 (extraction) on a Stage 1 CSV dump.",
 )
 @click.option(
+    "--redact/--no-redact",
+    "redact_output",
+    default=True,
+    show_default=True,
+    help="Hash custom_field_1/custom_field_2 tokens with a per-run salted "
+    "HMAC-SHA256 and drop source_line from Stage 2 output. --no-redact emits "
+    "plaintext and is for authorized live engagements only.",
+)
+@click.option(
     "--no-summary",
     is_flag=True,
     help="Suppress the summary report on stderr.",
@@ -156,6 +171,7 @@ def _cli(
     one_row_per_match: bool,
     stage1_only: bool,
     stage2_only: bool,
+    redact_output: bool,
     no_summary: bool,
 ) -> int:
     """Search large unstructured .txt dumps and extract fields by pattern
@@ -167,6 +183,9 @@ def _cli(
 
     if stage1_only and stage2_only:
         raise click.UsageError("--stage1-only and --stage2-only are mutually exclusive")
+
+    if not redact_output:
+        print(NO_REDACT_WARNING, file=sys.stderr)
 
     compiled_patterns = _build_search_patterns(patterns)
 
@@ -192,6 +211,9 @@ def _cli(
     else:
         rows = extractor.build_stage2_frame(matches, one_row_per_match=one_row_per_match)
         summary.column_matches = output.count_column_matches(rows)
+        if redact_output:
+            # Rebind so the raw frame can't reach any writer below.
+            rows = redact.redact_frame(rows, redact.generate_salt())
         _write_outputs(rows, output_base)
 
     if not no_summary:
