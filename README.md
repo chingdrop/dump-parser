@@ -8,13 +8,31 @@ extraction — records flow through the pipeline as DataFrames, and every field
 is pulled out with a single `Series.str` call across all rows at once rather
 than a Python loop over lines/matches.
 
+## About this project
+
+This project began as a data-parsing tool used in past professional security
+work to search large, unstructured text dumps — including large public
+breach compilations such as RockYou2024 and MOAB (Mother of All Breaches) —
+and extract structured fields from them. What's published here is an
+independent, from-scratch rebuild of that idea: no code or regex patterns
+were carried over from the original, and none of that real data lives in
+this repository. It does delimiter-agnostic field extraction from large text
+dumps, built on Dask and pandas.
+[`sample_data/`](sample_data/) is hand-written and fictional, no real breach
+material; the optional demo generator
+([`tools/gen_fixtures.py`](tools/gen_fixtures.py)) makes a larger synthetic
+dataset with Faker, into a gitignored directory. Output is redacted by
+default — raw plaintext needs an explicit, warned-about `--no-redact` flag.
+Full statement:
+[docs/provenance-and-data-boundary.md](docs/provenance-and-data-boundary.md).
+
 ## Why "delimiter-agnostic"?
 
 The source lines are delimited inconsistently — the same field type can be
 separated by a comma, a space, a pipe `|`, a colon `:`, or a mix, with no fixed
 schema. So we never `str.split()` on a delimiter. Each line is treated as a raw
 blob and every field is found by regex, anywhere on the line. See
-[`patterns.py`](dump_parser/patterns.py) for the full rationale.
+[`patterns.py`](src/dump_parser/patterns.py) for the full rationale.
 
 ## Install
 
