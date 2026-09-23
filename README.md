@@ -1,5 +1,7 @@
 # dump-parser
 
+[![CI](https://github.com/chingdrop/dump-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/chingdrop/dump-parser/actions/workflows/ci.yml)
+
 A PowerGREP-style CLI for searching large, unstructured `.txt` dumps and
 extracting fields **by pattern shape rather than by delimiter**. Built on
 [Dask](https://www.dask.org/) (`dask.bytes`) for parallel, out-of-core file
@@ -261,6 +263,13 @@ Full project history — retroactive, since this predates having a changelog —
 is in [CHANGELOG.md](CHANGELOG.md). What the tool currently can't do, and
 any open directions for it, are in
 [docs/limitations-and-roadmap.md](docs/limitations-and-roadmap.md).
+
+## Security
+
+How to report a vulnerability, and the response window, are in
+[SECURITY.md](SECURITY.md). What this tool processes, the redaction
+boundary, and what's (and isn't) transmitted or written to disk are in
+[docs/threat-model.md](docs/threat-model.md).
 
 ## Development
 
