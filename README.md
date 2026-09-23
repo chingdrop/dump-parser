@@ -255,6 +255,13 @@ with `processes` as the default scheduler, why Click over argparse, why the
 evidence-linked record — live in
 [docs/decisions/](docs/decisions/README.md).
 
+## Changelog and limitations
+
+Full project history — retroactive, since this predates having a changelog —
+is in [CHANGELOG.md](CHANGELOG.md). What the tool currently can't do, and
+any open directions for it, are in
+[docs/limitations-and-roadmap.md](docs/limitations-and-roadmap.md).
+
 ## Development
 
 ```bash
