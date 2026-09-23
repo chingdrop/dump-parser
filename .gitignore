@@ -5,3 +5,8 @@ __pycache__/
 out/
 *.egg-info/
 .idea/
+
+# Generated demo fixtures/output (tools/gen_fixtures.py, `make demo`) -- never
+# committed; regenerate with `make demo` / `make demo-clean`.
+demo_data/
+demo_output/
