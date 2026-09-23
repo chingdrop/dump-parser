@@ -1,0 +1,25 @@
+version: 2
+
+updates:
+  # pyproject.toml + uv.lock. "uv" (not "pip") is the ecosystem that
+  # understands uv.lock -- confirmed against dependabot-core's own
+  # registration (Dependabot::FileFetchers.register("uv", ...)).
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      python-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
