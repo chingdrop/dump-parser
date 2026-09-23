@@ -18,10 +18,10 @@ speed); 'threads' mainly overlaps I/O" — because Python's `re` holds the GIL.
 
 ## Alternatives considered
 
-Keep JSON output (rejected: not stated why beyond simplifying to one format
-<!-- TODO(craig): was JSON actually used by anyone, or unused complexity? -->).
-`threads` as the CLI default (rejected: GIL means threads mostly overlap I/O,
-not CPU-bound regex work).
+Keep JSON output (rejected: per the author, the project always used CSV for
+debugging in practice, so JSON support was unused complexity, not a format
+anyone relied on). `threads` as the CLI default (rejected: GIL means threads
+mostly overlap I/O, not CPU-bound regex work).
 
 ## Consequences
 
