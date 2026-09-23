@@ -102,12 +102,24 @@ link, custom_field_1, custom_field_2, source_line`) and prints a warning to
 stderr. Use it only inside a live, authorized engagement — never for demos,
 samples, or anything shared.
 
+### Stage 1 (`--stage1-only`) redaction
+
+`--redact` also applies to `--stage1-only` output. The default columns are
+`file, line_number, matched_text, pattern` — **no `source_line`**, dropped for
+the same reason as Stage 2's. `matched_text` (whatever the search pattern
+matched — with the default any-field pattern, exactly one of the four field
+values) is hashed the same way as Stage 2's tokens, *unless* it is itself an
+email or link, which stay visible as exposure findings. `--no-redact` restores
+the full plaintext columns including `source_line`, with the same stderr
+warning.
+
 ### Known limitations
 
-- `--stage1-only` output (and the Stage 1 CSV consumed by `--stage2-only`) is
-  **not** affected by `--redact`: it still contains the raw `source_line`.
-  Stage 1's `source_line` is a separate concern from Stage 2's redaction and
-  is not yet covered — treat Stage 1 dumps as plaintext credential material.
+- A redacted `--stage1-only` dump can no longer be fed into `--stage2-only`:
+  Stage 2 extracts every field from `source_line`, which redaction removes.
+  `--stage2-only` detects this and fails with a clear error pointing at
+  `--no-redact` rather than silently returning empty fields. If you need the
+  Stage 1 → Stage 2 roundtrip, run `--stage1-only` with `--no-redact`.
 
 The summary report lists: files scanned, lines scanned, Stage 1 matches, matches
 per column, elapsed time, files that needed an encoding fallback, and files that

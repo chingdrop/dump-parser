@@ -25,8 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--no-redact` to restore the previous full plaintext output (including
   `source_line`); it prints a warning to stderr and is intended only for live,
   authorized engagements.
-
-### Known limitations
-
-- `--stage1-only` output (and the Stage 1 CSV read by `--stage2-only`) is
-  unaffected by `--redact` and still contains the raw `source_line`.
+- **`--stage1-only` output is now redacted by default too** (behavior
+  change). `matched_text` is hashed the same way as Stage 2's tokens unless
+  it's itself an email or link, and `source_line` is dropped. As a
+  consequence, a default (`--redact`) `--stage1-only` dump can no longer be
+  fed into `--stage2-only` — Stage 2 extraction needs `source_line`, and
+  `--stage2-only` now fails with a clear error telling you to re-run
+  `--stage1-only --no-redact` if you need that roundtrip, rather than
+  silently producing empty fields.
