@@ -21,10 +21,9 @@ tests depend on.
 
 ## Alternatives considered
 
-<!-- TODO(craig): the commit message states what changed and what was
-preserved (main(argv) contract), but not why Click specifically over
-argparse — better option/type ergonomics? Preference from another project?
-Not recorded here. -->
+Staying on `argparse` was the only alternative on the table. Click was
+chosen because it's what the author was already familiar with, not for a
+feature `argparse` lacked.
 
 ## Consequences
 
