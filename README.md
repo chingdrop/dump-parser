@@ -30,6 +30,10 @@ the venv (`source .venv/bin/activate`) and drop the prefix.
 
 ## Usage
 
+Want to see it run end-to-end without touching real data? See
+[docs/demo.md](docs/demo.md) (`make demo`) — it generates a synthetic,
+messy-dump-shaped dataset and runs the full redact+report pipeline over it.
+
 ```bash
 # Full pipeline over a directory (recursive), CSV output
 uv run dump-parser sample_data -o out/results
