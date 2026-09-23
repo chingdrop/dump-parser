@@ -62,6 +62,7 @@ def test_cli_domain_search_pattern(tmp_path):
             "--scheduler",
             "synchronous",
             "--no-summary",
+            "--no-redact",
         ]
     )
     text = stage1.read_text(encoding="utf-8")
@@ -72,7 +73,9 @@ def test_cli_domain_search_pattern(tmp_path):
 def test_cli_stage1_then_stage2_roundtrip(tmp_path):
     _make_dump(tmp_path)
     stage1 = tmp_path / "hits.csv"
-    cli.main([str(tmp_path), "--stage1-only", "-o", str(stage1), "--scheduler", "synchronous", "--no-summary"])
+    cli.main(
+        [str(tmp_path), "--stage1-only", "-o", str(stage1), "--scheduler", "synchronous", "--no-summary", "--no-redact"]
+    )
 
     parsed = tmp_path / "parsed.csv"
     cli.main([str(stage1), "--stage2-only", "-o", str(parsed), "--no-summary", "--no-redact"])
@@ -148,6 +151,45 @@ def test_cli_report_with_stage1_only_errors(tmp_path):
             "--no-summary",
         ]
     )
+    assert rc == 2
+
+
+def test_cli_stage1_only_redaction_is_default(tmp_path):
+    _make_dump(tmp_path)
+    stage1 = tmp_path / "hits.csv"
+    rc = cli.main([str(tmp_path), "--stage1-only", "-o", str(stage1), "--scheduler", "synchronous", "--no-summary"])
+    assert rc == 0
+
+    csv_text = stage1.read_text(encoding="utf-8")
+    header = csv_text.splitlines()[0]
+    assert header == "file,line_number,matched_text,pattern"
+    assert "source_line" not in header
+    # Emails stay visible as matched_text (an exposure finding); tokens do not.
+    assert "jane@acme.io" in csv_text
+    for token in ("Eagles211@", "Falcons88", "Ravens77", "Tigers12"):
+        assert token not in csv_text
+
+
+def test_cli_stage1_only_no_redact_keeps_plaintext(tmp_path, capsys):
+    _make_dump(tmp_path)
+    stage1 = tmp_path / "hits.csv"
+    rc = cli.main(
+        [str(tmp_path), "--stage1-only", "-o", str(stage1), "--scheduler", "synchronous", "--no-summary", "--no-redact"]
+    )
+    assert rc == 0
+    assert "WARNING: --no-redact outputs plaintext credential-shaped data" in capsys.readouterr().err
+
+    csv_text = stage1.read_text(encoding="utf-8")
+    assert "source_line" in csv_text.splitlines()[0]
+    assert "Eagles211@" in csv_text
+
+
+def test_cli_stage2_only_on_redacted_stage1_dump_errors_clearly(tmp_path):
+    _make_dump(tmp_path)
+    stage1 = tmp_path / "hits.csv"
+    cli.main([str(tmp_path), "--stage1-only", "-o", str(stage1), "--scheduler", "synchronous", "--no-summary"])
+
+    rc = cli.main([str(stage1), "--stage2-only", "-o", str(tmp_path / "parsed.csv"), "--no-summary"])
     assert rc == 2
 
 

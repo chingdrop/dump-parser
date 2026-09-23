@@ -152,9 +152,10 @@ def _write_outputs(df, output_base: str | None) -> None:
     "redact_output",
     default=True,
     show_default=True,
-    help="Hash custom_field_1/custom_field_2 tokens with a per-run salted "
-    "HMAC-SHA256 and drop source_line from Stage 2 output. --no-redact emits "
-    "plaintext and is for authorized live engagements only.",
+    help="Hash credential-shaped tokens with a per-run salted HMAC-SHA256 and "
+    "drop source_line (Stage 2: custom_field_1/custom_field_2; --stage1-only: "
+    "matched_text unless it's an email/link). --no-redact emits plaintext and "
+    "is for authorized live engagements only.",
 )
 @click.option(
     "--report",
@@ -203,7 +204,10 @@ def _cli(
 
     if stage2_only:
         # Input is a Stage 1 dump; skip scanning.
-        matches = output.read_stage1(input_path)
+        try:
+            matches = output.read_stage1(input_path)
+        except ValueError as exc:
+            raise click.UsageError(str(exc)) from exc
         summary = ScanSummary(
             files_scanned=int(matches["file"].nunique()),
             lines_scanned=len(matches),
@@ -219,6 +223,8 @@ def _cli(
         )
 
     if stage1_only:
+        if redact_output:
+            matches = redact.redact_stage1_frame(matches, redact.generate_salt())
         _write_outputs(matches, output_base)
     else:
         rows = extractor.build_stage2_frame(matches, one_row_per_match=one_row_per_match)
