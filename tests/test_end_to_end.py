@@ -82,6 +82,75 @@ def test_cli_stage1_then_stage2_roundtrip(tmp_path):
     assert "https://acme.io/p" in text
 
 
+def test_cli_redaction_is_default(tmp_path):
+    _make_dump(tmp_path)
+    base = tmp_path / "out" / "results"
+    rc = cli.main([str(tmp_path), "-o", str(base), "--scheduler", "synchronous", "--no-summary"])
+    assert rc == 0
+
+    csv_text = (tmp_path / "out" / "results.csv").read_text(encoding="utf-8")
+    header = csv_text.splitlines()[0]
+    assert header == "file,line_number,email,link,custom_field_1,custom_field_2"
+    assert "source_line" not in header
+    # Emails/links stay visible; plaintext tokens do not appear.
+    assert "jane@acme.io" in csv_text
+    for token in ("Eagles211@", "Falcons88", "Ravens77", "Tigers12"):
+        assert token not in csv_text
+
+
+def test_cli_no_redact_warns_and_keeps_plaintext(tmp_path, capsys):
+    _make_dump(tmp_path)
+    base = tmp_path / "out" / "plain"
+    rc = cli.main([str(tmp_path), "-o", str(base), "--scheduler", "synchronous", "--no-summary", "--no-redact"])
+    assert rc == 0
+    err = capsys.readouterr().err
+    assert "WARNING: --no-redact outputs plaintext credential-shaped data" in err
+
+    csv_text = (tmp_path / "out" / "plain.csv").read_text(encoding="utf-8")
+    assert "Eagles211@" in csv_text
+    assert "source_line" in csv_text.splitlines()[0]
+
+
+def test_cli_report_produces_markdown(tmp_path):
+    _make_dump(tmp_path)
+    base = tmp_path / "out" / "results"
+    report_path = tmp_path / "out" / "report.md"
+    rc = cli.main(
+        [
+            str(tmp_path),
+            "-o",
+            str(base),
+            "--report",
+            str(report_path),
+            "--scheduler",
+            "synchronous",
+            "--no-summary",
+        ]
+    )
+    assert rc == 0
+    md = report_path.read_text(encoding="utf-8")
+    assert "## Exposure Summary" in md
+    assert "## Password Reuse" in md
+    # No plaintext token leaks into the report either.
+    assert "Eagles211@" not in md
+
+
+def test_cli_report_with_stage1_only_errors(tmp_path):
+    _make_dump(tmp_path)
+    rc = cli.main(
+        [
+            str(tmp_path),
+            "--stage1-only",
+            "--report",
+            str(tmp_path / "r.md"),
+            "--scheduler",
+            "synchronous",
+            "--no-summary",
+        ]
+    )
+    assert rc == 2
+
+
 def test_cli_blockwise_equivalent(tmp_path):
     _make_dump(tmp_path)
     base_a = tmp_path / "stream"
