@@ -246,6 +246,15 @@ returns one with `STAGE1_COLUMNS`, `extractor.build_stage2_frame` returns one
 with `OUTPUT_COLUMNS`, and `output.py`/`cli.py` just read/write that frame —
 there's no intermediate per-row object model to keep in sync.
 
+## Design decisions
+
+Why delimiter-agnostic regex over splitting, why pandas replaced per-line
+Python loops, why `read_bytes` is driven directly, why output is CSV-only
+with `processes` as the default scheduler, why Click over argparse, why the
+`src/` layout, and why redaction is a salted HMAC — each as a short,
+evidence-linked record — live in
+[docs/decisions/](docs/decisions/README.md).
+
 ## Development
 
 ```bash
