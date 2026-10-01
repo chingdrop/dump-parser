@@ -69,6 +69,8 @@ commit through now, rather than a single past release.
 - Stage 2 output, and separately `--stage1-only` output, are now redacted by
   default (see Added) — a behavior change from the plaintext output every
   prior version produced.
+- Relicensed from GPLv3 to MIT; `pyproject.toml` now declares the license
+  (`license = "MIT"`) so it appears in the built package metadata.
 
 ### Removed
 
