@@ -16,8 +16,6 @@ the maintainer and you, rather than a public issue.
 
 Please do not open a public GitHub issue for a suspected vulnerability.
 
-<!-- TODO(craig): backup contact email, if wanted -->
-
 **Response window:** expect an initial response within 5 business days. This
 is a portfolio/personal project maintained by one person, not a funded
 security team with an SLA — that response time is a best-effort target, not

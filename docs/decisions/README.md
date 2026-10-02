@@ -5,8 +5,9 @@ design pivots in this repo's history, drafted from the actual code, tests,
 and `git log` — not reconstructed from memory. Each one is under ~250 words:
 Context, Decision, Alternatives considered, Consequences, and an Evidence
 line pinning it to the file(s) and commit hash(es) that back it up. Where the
-repo doesn't record *why* a choice was made, the record says so with a
-`<!-- TODO(craig): ... -->` comment rather than guessing.
+repo doesn't record *why* a choice was made, the record says so rather than
+guessing, and the open question goes in [TODO.md](../../TODO.md) under
+"Author decisions".
 
 New decisions get a new numbered file (`NNNN-short-title.md`), not an edit to
 an old one — if a later decision reverses or narrows an earlier one, the

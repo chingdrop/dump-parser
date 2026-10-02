@@ -40,14 +40,6 @@ updated in the same change that fixes it.
 
 ## Possible next steps
 
-These are directions, not commitments, pulled only from open markers
-actually left in this repo — not the author's or anyone else's new ideas.
-
-As of this writing, there are no open `TODO`/`FIXME` comments anywhere in
-`src/` or `tools/`, and a repo-wide search for `TODO(craig)` markers (the
-convention used in `docs/decisions/` and
-`docs/provenance-and-data-boundary.md` for facts only the author can
-confirm) turns up none outstanding — every one raised in earlier work has
-been resolved. So there is currently nothing to list here. When a real
-`TODO`/`FIXME` or `TODO(craig)` marker exists in the repo, it belongs in
-this section.
+Planned features, open bugs, and questions only the author can answer are
+tracked in [TODO.md](../TODO.md) at the repo root, not here and not as
+inline `TODO`/`FIXME`/`TODO(craig)` comments.
