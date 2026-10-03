@@ -62,3 +62,5 @@ python_version = "3.12"
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
+strict_equality = true
+check_untyped_defs = true

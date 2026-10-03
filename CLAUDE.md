@@ -17,7 +17,7 @@ uv run dump-parser sample_data -o out/results   # run the CLI (installed console
 uv run python -m dump_parser ...                # equivalent, no console script needed
 uv run ruff check src tests tools          # lint
 uv run ruff format src tests tools         # format
-uv run mypy src/dump_parser                # type check
+uv run mypy src/dump_parser tools/         # type check
 uv run pre-commit run --all-files          # run all pre-commit hooks locally
 ```
 

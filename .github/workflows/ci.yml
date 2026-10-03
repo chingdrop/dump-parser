@@ -41,7 +41,7 @@ jobs:
         run: uv run ruff format --check src tests tools
 
       - name: mypy
-        run: uv run mypy src/dump_parser
+        run: uv run mypy src/dump_parser tools/
 
   test:
     if: github.event_name != 'schedule'
