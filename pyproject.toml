@@ -22,6 +22,7 @@ dev = [
     "pandas-stubs>=2.2",
     "pre-commit>=4.0",
     "faker>=40.39.0",
+    "pytest-cov>=7.1.0",
 ]
 
 [build-system]
@@ -64,3 +65,13 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 strict_equality = true
 check_untyped_defs = true
+
+[tool.coverage.run]
+source = ["dump_parser"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+# Floor = measured baseline (84.49% branch coverage, 2026-10-03) minus 2, rounded down.
+fail_under = 82
