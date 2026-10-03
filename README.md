@@ -276,8 +276,8 @@ boundary, and what's (and isn't) transmitted or written to disk are in
 ```bash
 uv sync                              # installs runtime + dev deps (ruff, mypy, pytest, pre-commit)
 uv run pytest -q                     # tests
-uv run ruff check src tests          # lint
-uv run ruff format src tests         # format
+uv run ruff check src tests tools    # lint
+uv run ruff format src tests tools   # format
 uv run mypy src/dump_parser          # type check
 uv run pre-commit install            # one-time: run the checks above on every commit
 ```

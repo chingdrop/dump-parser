@@ -15,8 +15,8 @@ uv run pytest tests/test_scanner.py::test_blockwise_matches_streaming -q  # sing
 uv run python -m dump_parser.patterns      # regex self-test/demo (pass/fail per case, no pytest)
 uv run dump-parser sample_data -o out/results   # run the CLI (installed console script)
 uv run python -m dump_parser ...                # equivalent, no console script needed
-uv run ruff check src tests                # lint
-uv run ruff format src tests               # format
+uv run ruff check src tests tools          # lint
+uv run ruff format src tests tools         # format
 uv run mypy src/dump_parser                # type check
 uv run pre-commit run --all-files          # run all pre-commit hooks locally
 ```

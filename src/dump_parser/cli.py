@@ -50,7 +50,7 @@ class _BlockSizeParam(click.ParamType):
         match = re.fullmatch(r"(\d+(?:\.\d+)?)\s*([KMG]?B)?", text)
         if not match:
             self.fail(f"invalid blocksize: {value!r}", param, ctx)
-        assert match is not None  # self.fail() always raises
+        assert match is not None  # self.fail() always raises; narrows for mypy  # noqa: S101
         number, unit = match.groups()
         return int(float(number) * self._UNITS[unit or "B"])
 

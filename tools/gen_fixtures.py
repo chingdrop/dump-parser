@@ -87,7 +87,8 @@ def make_email(rng: random.Random, fake: Faker) -> str:
     local = f"{first}{sep}{last}{rng.randint(0, 999)}"
     domain = BLUESHIFT_DOMAIN if rng.random() < BLUESHIFT_RATE else rng.choice(DOMAINS)
     email = f"{local}@{domain}"
-    assert EMAIL_RE.fullmatch(email), f"generated email failed its own pattern: {email!r}"
+    if not EMAIL_RE.fullmatch(email):
+        raise ValueError(f"generated email failed its own pattern: {email!r}")
     return email
 
 
@@ -98,7 +99,8 @@ def make_link(rng: random.Random, fake: Faker, domain: str) -> str:
     query = f"?id={rng.randint(1, 999)}" if rng.random() < 0.3 else ""
     frag = f"#{_sanitize(_PATH_SAFE, fake.word(), 'frag')}" if rng.random() < 0.2 else ""
     link = f"{scheme}{domain}{path}{query}{frag}"
-    assert URL_RE.fullmatch(link), f"generated link failed its own pattern: {link!r}"
+    if not URL_RE.fullmatch(link):
+        raise ValueError(f"generated link failed its own pattern: {link!r}")
     return link
 
 
@@ -116,7 +118,8 @@ def make_fresh_token(rng: random.Random, fake: Faker) -> str:
     token = f"{word}{rng.randint(0, 10**9)}"
     if rng.random() < 0.4:
         token += "@"
-    assert CUSTOM_FIELD_1_RE.fullmatch(token), f"generated token failed its own pattern: {token!r}"
+    if not CUSTOM_FIELD_1_RE.fullmatch(token):
+        raise ValueError(f"generated token failed its own pattern: {token!r}")
     return token
 
 
@@ -305,7 +308,7 @@ def generate(config: GenConfig) -> dict:
                 if result.email:
                     all_emails.add(result.email)
                 for token in result.pool_hits:
-                    assert result.email is not None
+                    assert result.email is not None  # pool hits imply an email; narrows for mypy  # noqa: S101
                     pool_events.append((result.email, token))
 
         full_path = os.path.join(config.out_dir, rel_path)
