@@ -60,6 +60,10 @@ commit through now, rather than a single past release.
   `check-added-large-files` (500 KB).
 - `CONTRIBUTING.md` (setup, layout, quality commands, coverage policy) and
   ADR 0008 recording the shared Python tooling standard.
+- A demo GIF (`docs/demo.gif`, recorded from `docs/demo.tape` with vhs) and a
+  one-page results sheet (`docs/results-sheet.png`, built by
+  `tools/results_sheet.py` from a `make demo` run's own output and checked
+  against the generator's manifest), both shown in the README.
 
 ### Changed
 

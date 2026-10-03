@@ -55,6 +55,8 @@ select = [
 "tests/**" = ["S101"]
 # seeded Random makes the fixtures reproducible
 "tools/gen_fixtures.py" = ["S311"]
+# runs the local browser and ffmpeg by name to screenshot the results sheet; no untrusted input
+"tools/results_sheet.py" = ["S603", "S607"]
 
 [tool.mypy]
 # Pins the target so the pre-commit hook's isolated environment checks

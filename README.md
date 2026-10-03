@@ -54,6 +54,15 @@ Want to see it run end-to-end without touching real data? See
 [docs/demo.md](docs/demo.md) (`make demo`) — it generates a synthetic,
 messy-dump-shaped dataset and runs the full redact+report pipeline over it.
 
+![dump-parser demo: raw synthetic dump lines with mixed colon, space and pipe delimiters, the CLI's summary for 8 files and 4,000 lines including one Latin-1 encoding fallback, and the redacted CSV with emails and links kept and tokens replaced by salted hashes](docs/demo.gif)
+
+![Results sheet for one make demo run: 3,909 of 4,000 lines extracted to rows, 3,393 distinct emails, 84 of 84 injected password-reuse clusters found at the same sizes, and 7 of 7 checks against the generator's manifest passing, with raw-line-to-redacted-row examples for each delimiter style](docs/results-sheet.png)
+
+*One `make demo` run on one page, built from its own output (`make demo`, then
+`uv run python tools/results_sheet.py --png docs/results-sheet.png`). The
+recording is [`docs/demo.tape`](docs/demo.tape); re-render it with `vhs
+docs/demo.tape` (see the comments in the tape).*
+
 ```bash
 # Full pipeline over a directory (recursive), CSV output
 uv run dump-parser sample_data -o out/results
