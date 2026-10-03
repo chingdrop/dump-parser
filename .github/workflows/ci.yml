@@ -24,54 +24,61 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
-          python-version: "3.10"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: uv sync --locked
 
       - name: Ruff check
-        run: uv run ruff check src tests
+        run: uv run ruff check src tests tools
 
       - name: Ruff format check
-        run: uv run ruff format --check src tests
+        run: uv run ruff format --check src tests tools
 
       - name: mypy
-        run: uv run mypy src/dump_parser
+        run: uv run mypy src/dump_parser tools/
 
   test:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
-          python-version: "3.10"
+          python-version: "3.12"
 
       - name: Install dependencies
         run: uv sync --locked
 
+      # The coverage floor lives in pyproject.toml [tool.coverage.report].
       - name: Run tests
-        run: uv run pytest -v
+        run: uv run pytest -v --cov
 
   build:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
-          python-version: "3.10"
+          python-version: "3.12"
 
       - name: Build package
         run: uv build
@@ -96,17 +103,21 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           enable-cache: true
-          python-version: "3.10"
+          python-version: "3.12"
+
+      # Two steps, not a pipe: a failed `uv export` must fail the job rather
+      # than being masked by the pipe.
+      - name: Export locked runtime dependencies
+        run: uv export --locked --no-dev --no-emit-project --format requirements-txt -o "$RUNNER_TEMP/requirements-audit.txt"
 
       - name: pip-audit (locked dependencies)
-        run: |
-          uv export --no-dev --format requirements-txt --no-emit-project \
-            | uv tool run pip-audit -r /dev/stdin --disable-pip
+        run: uvx pip-audit@2.10.1 -r "$RUNNER_TEMP/requirements-audit.txt" --no-deps --disable-pip
 
       - name: gitleaks
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0

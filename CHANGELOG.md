@@ -52,6 +52,14 @@ commit through now, rather than a single past release.
   (`docs/provenance-and-data-boundary.md`) and a README "About this project"
   section, covering origin, what's synthetic vs. what must never be
   committed, and current output-safety behavior.
+- A CI coverage gate: `pytest-cov` with a branch-coverage floor
+  (`fail_under = 82`, baseline 84.49% minus 2) in `pyproject.toml`.
+- ruff's `S` (flake8-bandit) rules, with ruff and mypy now covering `tools/`
+  too, and mypy's `strict_equality` and `check_untyped_defs` flags.
+- pre-commit security hooks: gitleaks, `detect-private-key`, and
+  `check-added-large-files` (500 KB).
+- `CONTRIBUTING.md` (setup, layout, quality commands, coverage policy) and
+  ADR 0008 recording the shared Python tooling standard.
 
 ### Changed
 
@@ -71,6 +79,14 @@ commit through now, rather than a single past release.
   prior version produced.
 - Relicensed from GPLv3 to MIT; `pyproject.toml` now declares the license
   (`license = "MIT"`) so it appears in the built package metadata.
+- **Breaking:** `requires-python` raised from `>=3.10` to `>=3.12`, pinned in
+  `.python-version`; Python 3.10 and 3.11 are no longer supported, and CI now
+  runs on 3.12 only.
+- CI's pip-audit step now audits a `uv export --locked` file with a pinned
+  `pip-audit@2.10.1`, in two steps so a failed export can't be masked by a
+  pipe; all `actions/checkout` steps set `persist-credentials: false`.
+- CodeQL workflow: `github/codeql-action` bumped from v4.38.1 to v4.38.2
+  (SHA-pinned), and it gains the same `concurrency` cancellation as CI.
 
 ### Removed
 

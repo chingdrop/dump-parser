@@ -96,7 +96,7 @@ def strip_url(match: str) -> str:
 # accepted. The left boundary forbids a preceding alnum/email char so the token
 # is standalone regardless of whether a space, comma, pipe or colon precedes it.
 _CUSTOM_TOKEN = (
-    r"(?<![A-Za-z0-9@._%+\-])"  # left boundary
+    r"(?<![A-Za-z0-9@._%+\-])"  # left boundary; a field-shape regex, not a password  # noqa: S105
     r"[A-Za-z]+\d+"  # letters then digits, e.g. Eagles211
     r"@?"  # optional trailing @ marker
     r"(?![A-Za-z0-9@])"  # right boundary: not an email local part

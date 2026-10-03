@@ -1,12 +1,13 @@
+# Run `uv run pre-commit autoupdate` periodically to pick up new hook releases.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.21
     hooks:
       - id: ruff-check
         args: [--fix]
-        files: ^(src|tests)/
+        files: ^(src|tests|tools)/
       - id: ruff-format
-        files: ^(src|tests)/
+        files: ^(src|tests|tools)/
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v2.3.0
@@ -15,3 +16,15 @@ repos:
         additional_dependencies:
           - pandas-stubs
         files: ^src/
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: [--maxkb=500]

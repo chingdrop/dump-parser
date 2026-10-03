@@ -10,14 +10,15 @@ Dependencies are managed with `uv`. The package lives under `src/dump_parser`
 ```bash
 uv sync                                    # install/update the venv from uv.lock
 uv run pytest -q                           # run the full test suite
+uv run pytest --cov                        # tests + branch-coverage floor (as CI runs it)
 uv run pytest tests/test_patterns.py -q    # run one test file
 uv run pytest tests/test_scanner.py::test_blockwise_matches_streaming -q  # single test
 uv run python -m dump_parser.patterns      # regex self-test/demo (pass/fail per case, no pytest)
 uv run dump-parser sample_data -o out/results   # run the CLI (installed console script)
 uv run python -m dump_parser ...                # equivalent, no console script needed
-uv run ruff check src tests                # lint
-uv run ruff format src tests               # format
-uv run mypy src/dump_parser                # type check
+uv run ruff check src tests tools          # lint
+uv run ruff format src tests tools         # format
+uv run mypy src/dump_parser tools/         # type check
 uv run pre-commit run --all-files          # run all pre-commit hooks locally
 ```
 
@@ -25,18 +26,24 @@ uv run pre-commit run --all-files          # run all pre-commit hooks locally
 multiprocessing scheduler re-imports the entry module in worker processes, so
 any new entry point must stay behind an `if __name__ == "__main__":` guard.
 
-CI (`.github/workflows/ci.yml`) runs `lint` (ruff check, ruff format --check,
-mypy), `test` (pytest), and `build` (`uv build`) as separate jobs against
-Python 3.10 (the `requires-python` floor) on every push to `main` and PR.
-`mypy`'s own `python_version` is pinned to 3.12 in `pyproject.toml` — that's
-unrelated to the 3.10 runtime floor; numpy's stubs use PEP 695 `type`
-statements that mypy can only parse under 3.12+, so this is a static-analysis
-workaround, not a support-matrix change. The `.pre-commit-config.yaml` mypy
+CI (`.github/workflows/ci.yml`) runs `lint` (ruff check and ruff format --check
+on `src tests tools`, mypy on `src/dump_parser tools/`), `test`
+(`pytest -v --cov`, failing below `fail_under` in `[tool.coverage.report]`),
+`build` (`uv build`), and `security` (pip-audit on the locked runtime export,
+gitleaks) as separate jobs against
+Python 3.12 on every push to `main` and PR. 3.12 is both the `requires-python`
+floor and the `.python-version` pin. `mypy`'s `python_version` is also pinned
+to 3.12 in `pyproject.toml`, so the pre-commit hook's isolated environment
+checks against the same version as `uv run mypy`. The `.pre-commit-config.yaml` mypy
 hook runs in an isolated env with only `pandas-stubs` installed (not the full
 project) — code that relies on a dependency's typed `NoReturn` (e.g. a
 validator's `self.fail()`) needs an explicit `assert` afterward, since mypy
 can silently lose that narrowing when the dependency itself isn't resolvable
-in that isolated environment (see `cli.py`'s `_BlockSizeParam.convert`).
+in that isolated environment (see `cli.py`'s `_BlockSizeParam.convert`). That
+hook stays `files: ^src/` because its environment lacks faker, which
+`tools/gen_fixtures.py` imports. Ruff selects `S` (flake8-bandit); any
+`# noqa` needs its reason on the same line. Contributor workflow, coverage
+policy and commit style are in `CONTRIBUTING.md`.
 
 ## Architecture
 
