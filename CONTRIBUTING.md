@@ -34,8 +34,9 @@ tests/              # flat pytest modules + conftest.py
 tools/
   gen_fixtures.py   # synthetic dataset generator for the demo and tests
   demo_summary.py   # prints the `make demo` summary
+  results_sheet.py  # one-page HTML/PNG results sheet of a `make demo` run
 sample_data/        # small committed sample dumps (fake data)
-docs/               # threat model, roadmap, demo notes, ADRs (docs/decisions/)
+docs/               # threat model, roadmap, demo notes and assets, ADRs (docs/decisions/)
 Makefile            # `make demo`, `make demo-big`, `make demo-clean`
 ```
 

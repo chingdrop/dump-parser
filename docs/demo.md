@@ -149,6 +149,29 @@ report will then say so explicitly, in its "no reuse clusters found" line),
 or run `uv run python tools/gen_fixtures.py --help` for every flag
 (`--seed`, `--files`, `--lines-per-file`, `--big-file-lines`, `--out-dir`).
 
+## Recording and results sheet
+
+The README's [recording](demo.gif) is the real CLI on the same generated
+dataset; re-render it with `vhs docs/demo.tape` (see the comments in
+[`demo.tape`](demo.tape) for the vhs 0.12 / ffmpeg 9 workaround).
+
+The README's [results sheet](results-sheet.png) is built from one `make demo`
+run's own files: the generator's `manifest.json` as ground truth, and the
+pipeline's `results.csv` and `report.md`. It shows raw lines next to the
+redacted rows they produce, one per delimiter style, and checks the output
+against the manifest (distinct emails, every injected reuse cluster at the
+same size, no plaintext token in the CSV, no `source_line` column, every file
+contributing rows). Regenerate it with:
+
+```bash
+make demo
+uv run python tools/results_sheet.py --png docs/results-sheet.png
+```
+
+`--png` needs a Chromium-based browser (it finds Chrome, Chromium, Edge,
+Brave, or the Chromium vhs downloads) and ffmpeg. Without `--png` it writes
+only `demo_output/results-sheet.html`.
+
 ## Known gap this demo surfaces
 
 `--stage1-only` output is also redacted by default (`matched_text` hashed
