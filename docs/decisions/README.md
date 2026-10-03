@@ -22,3 +22,4 @@ earlier record stays as written and the new one says so in its own Context.
 | [0005](0005-click-over-argparse.md) | Click over argparse for the CLI | Accepted |
 | [0006](0006-src-layout-restructure.md) | Restructure to `src/` layout | Accepted |
 | [0007](0007-salted-hmac-redaction.md) | Salted HMAC for `custom_field_1`/`custom_field_2` redaction | Accepted |
+| [0008](0008-adopt-shared-python-tooling-standard.md) | Adopt the shared Python tooling standard | Accepted |
