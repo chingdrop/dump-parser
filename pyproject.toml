@@ -2,7 +2,7 @@
 name = "dump-parser"
 version = "0.1.0"
 description = "PowerGREP-style CLI for searching large unstructured .txt dumps and extracting fields by pattern shape, using Dask for parallel/out-of-core processing."
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
 dependencies = [
@@ -36,15 +36,14 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py310"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.mypy]
-# numpy's stubs use PEP 695 `type` statements unconditionally, which mypy can
-# only parse under python_version >= 3.12 -- this doesn't change the package's
-# actual supported floor (requires-python above stays >=3.10).
+# Pins the target so the pre-commit hook's isolated environment checks
+# against the same Python version as `uv run mypy`.
 python_version = "3.12"
 warn_unused_configs = true
 warn_redundant_casts = true

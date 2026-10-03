@@ -27,11 +27,10 @@ any new entry point must stay behind an `if __name__ == "__main__":` guard.
 
 CI (`.github/workflows/ci.yml`) runs `lint` (ruff check, ruff format --check,
 mypy), `test` (pytest), and `build` (`uv build`) as separate jobs against
-Python 3.10 (the `requires-python` floor) on every push to `main` and PR.
-`mypy`'s own `python_version` is pinned to 3.12 in `pyproject.toml` — that's
-unrelated to the 3.10 runtime floor; numpy's stubs use PEP 695 `type`
-statements that mypy can only parse under 3.12+, so this is a static-analysis
-workaround, not a support-matrix change. The `.pre-commit-config.yaml` mypy
+Python 3.12 on every push to `main` and PR. 3.12 is both the `requires-python`
+floor and the `.python-version` pin. `mypy`'s `python_version` is also pinned
+to 3.12 in `pyproject.toml`, so the pre-commit hook's isolated environment
+checks against the same version as `uv run mypy`. The `.pre-commit-config.yaml` mypy
 hook runs in an isolated env with only `pandas-stubs` installed (not the full
 project) — code that relies on a dependency's typed `NoReturn` (e.g. a
 validator's `self.fail()`) needs an explicit `assert` afterward, since mypy

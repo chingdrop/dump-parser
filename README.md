@@ -284,11 +284,10 @@ uv run pre-commit install            # one-time: run the checks above on every c
 
 `.github/workflows/ci.yml` runs `lint` (ruff check, ruff format --check, mypy),
 `test` (pytest), and `build` (`uv build`) as separate jobs on every push to
-`main` and on PRs, against Python 3.10 — the `requires-python` floor. Note that
-`mypy`'s own `python_version` in `pyproject.toml` is pinned to 3.12 regardless
-of that floor; numpy's stubs use syntax mypy can only parse under 3.12+, so
-this is a static-analysis-only workaround, not a change to what Python
-versions the package supports.
+`main` and on PRs, against Python 3.12 — both the `requires-python` floor and
+the `.python-version` pin. `mypy`'s `python_version` in `pyproject.toml` is
+pinned to 3.12 too, so the pre-commit hook checks against the same version as
+`uv run mypy`.
 
 ### Tests
 
